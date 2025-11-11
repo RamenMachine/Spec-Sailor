@@ -6,13 +6,34 @@ import { Button } from "@/components/ui/button";
 import { generateMockUsers, generateTrendData } from "@/data/mockData";
 import { Users, AlertTriangle, TrendingUp, Activity, Download, RefreshCw, Lightbulb } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { UserDetailModal } from "@/components/UserDetailModal";
+import { exportToCSV } from "@/utils/exportUtils";
+import { toast } from "sonner";
 
 const Home = () => {
   const navigate = useNavigate();
   const users = useMemo(() => generateMockUsers(1000), []);
   const trendData = useMemo(() => generateTrendData(), []);
+  const [selectedUser, setSelectedUser] = useState<typeof users[0] | null>(null);
+  const [modalOpen, setModalOpen] = useState(false);
+
+  const handleExport = () => {
+    const highRiskUsers = users.filter(u => u.riskLevel === 'HIGH');
+    exportToCSV(highRiskUsers, 'high-risk-users.csv');
+    toast.success(`Exported ${highRiskUsers.length} high-risk users to CSV`);
+  };
+
+  const handleRefresh = () => {
+    toast.success('Data refreshed successfully!');
+    window.location.reload();
+  };
+
+  const handleUserClick = (user: typeof users[0]) => {
+    setSelectedUser(user);
+    setModalOpen(true);
+  };
 
   const stats = useMemo(() => {
     const total = users.length;
@@ -161,7 +182,11 @@ const Home = () => {
                 </thead>
                 <tbody>
                   {topAtRiskUsers.map((user) => (
-                    <tr key={user.userId} className="border-b hover:bg-muted/50 transition-colors">
+                    <tr 
+                      key={user.userId} 
+                      className="border-b hover:bg-muted/50 transition-colors cursor-pointer"
+                      onClick={() => handleUserClick(user)}
+                    >
                       <td className="py-3 px-4 text-sm font-mono">{user.userId}</td>
                       <td className="py-3 px-4">
                         <RiskBadge level={user.riskLevel} />
@@ -184,11 +209,11 @@ const Home = () => {
           </CardHeader>
           <CardContent>
             <div className="flex flex-wrap gap-3">
-              <Button variant="outline" className="gap-2">
+              <Button variant="outline" className="gap-2" onClick={handleExport}>
                 <Download className="h-4 w-4" />
-                Export All Predictions
+                Export High Risk Users
               </Button>
-              <Button variant="outline" className="gap-2">
+              <Button variant="outline" className="gap-2" onClick={handleRefresh}>
                 <RefreshCw className="h-4 w-4" />
                 Refresh Data
               </Button>
@@ -204,6 +229,9 @@ const Home = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* User Detail Modal */}
+      <UserDetailModal user={selectedUser} open={modalOpen} onOpenChange={setModalOpen} />
     </Layout>
   );
 };

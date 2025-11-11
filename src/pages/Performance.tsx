@@ -1,11 +1,19 @@
 import { Layout } from "@/components/Layout";
 import { MetricCard } from "@/components/MetricCard";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { modelMetrics, featureImportance, confusionMatrix } from "@/data/mockData";
-import { Target, TrendingUp, Activity, Award } from "lucide-react";
+import { Target, TrendingUp, Activity, Award, Download } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
+import { exportModelReport } from "@/utils/exportUtils";
+import { toast } from "sonner";
 
 const Performance = () => {
+  const handleExportReport = () => {
+    exportModelReport();
+    toast.success('Model report exported successfully!');
+  };
+
   // Prepare confusion matrix data for visualization
   const confusionData = [
     { name: 'True Positive', value: confusionMatrix.truePositive, color: 'hsl(var(--risk-low))' },
@@ -209,6 +217,13 @@ const Performance = () => {
                   <p className="text-base font-semibold">Weekly (automated)</p>
                 </div>
               </div>
+            </div>
+
+            <div className="mt-6 pt-6 border-t">
+              <Button onClick={handleExportReport} className="gap-2">
+                <Download className="h-4 w-4" />
+                Download Model Report
+              </Button>
             </div>
           </CardContent>
         </Card>
