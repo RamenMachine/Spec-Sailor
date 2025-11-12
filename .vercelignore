@@ -1,9 +1,10 @@
 # Ignore Python backend files for Vercel frontend deployment
-# Only ignore root-level directories
+# Only ignore root-level api directory (not src/)
 /api/
+# Ignore root-level data directory (not src/data/)
 /data/
 /venv/
-# Ignore Python files (but TypeScript files in src/ are included)
+# Ignore Python files (TypeScript files in src/data/ will be included)
 *.py
 requirements.txt
 Dockerfile
@@ -14,6 +15,4 @@ start.sh
 *.pyc
 __pycache__/
 .python-version
-# Explicitly include src/data/mockData.ts (negation must come after ignore patterns)
-!src/data/mockData.ts
 
