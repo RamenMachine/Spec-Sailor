@@ -18,5 +18,5 @@ COPY data ./data
 # Expose port (Railway will set PORT env var)
 EXPOSE 8000
 
-# Start command
-CMD uvicorn api.simple_api:app --host 0.0.0.0 --port ${PORT:-8000}
+# Start command - use shell form to allow PORT variable substitution
+CMD ["sh", "-c", "uvicorn api.simple_api:app --host 0.0.0.0 --port ${PORT:-8000}"]
