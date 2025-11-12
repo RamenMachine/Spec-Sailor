@@ -1,8 +1,11 @@
 # Ignore Python backend files for Vercel frontend deployment
-api/
-data/
-venv/
+# Only ignore root-level directories, not src/data/
+/api/
+/data/
+/venv/
+# Ignore Python files but allow TypeScript files in src/data/
 *.py
+!src/**/*.ts
 requirements.txt
 Dockerfile
 Procfile
