@@ -1,0 +1,15 @@
+# Ignore Python backend files for Vercel frontend deployment
+api/
+data/
+venv/
+*.py
+requirements.txt
+Dockerfile
+Procfile
+railway.toml
+nixpacks.toml
+start.sh
+*.pyc
+__pycache__/
+.python-version
+
