@@ -5,7 +5,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { UserPrediction } from "@/data/mockData";
+import { UserPrediction } from "@/data/mockData.ts";
 import { RiskBadge } from "./RiskBadge";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";

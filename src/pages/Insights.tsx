@@ -1,6 +1,6 @@
 import { Layout } from "@/components/Layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { generateMockUsers } from "@/data/mockData";
+import { generateMockUsers } from "@/data/mockData.ts";
 import { Lightbulb, TrendingDown, Zap, BookOpen, Users, PieChart as PieChartIcon } from "lucide-react";
 import { useMemo } from "react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip, LineChart, Line, XAxis, YAxis, CartesianGrid } from 'recharts';

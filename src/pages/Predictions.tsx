@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { generateMockUsers, RiskLevel } from "@/data/mockData";
+import { generateMockUsers, RiskLevel } from "@/data/mockData.ts";
 import { Search, Filter, Download, ArrowUpDown } from "lucide-react";
 import { useMemo, useState } from "react";
 import { UserDetailModal } from "@/components/UserDetailModal";

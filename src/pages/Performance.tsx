@@ -2,7 +2,7 @@ import { Layout } from "@/components/Layout";
 import { MetricCard } from "@/components/MetricCard";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { modelMetrics, featureImportance, confusionMatrix } from "@/data/mockData";
+import { modelMetrics, featureImportance, confusionMatrix } from "@/data/mockData.ts";
 import { Target, TrendingUp, Activity, Award, Download } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
 import { exportModelReport } from "@/utils/exportUtils";

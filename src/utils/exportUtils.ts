@@ -1,4 +1,4 @@
-import { UserPrediction } from "@/data/mockData";
+import { UserPrediction } from "@/data/mockData.ts";
 
 export const exportToCSV = (users: UserPrediction[], filename: string = 'churn-predictions.csv') => {
   // Define CSV headers
