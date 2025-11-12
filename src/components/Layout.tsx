@@ -73,13 +73,6 @@ export const Layout = ({ children }: LayoutProps) => {
               >
                 Insights
               </NavLink>
-              <NavLink
-                to="/upload"
-                className="px-4 py-2 rounded-md text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
-                activeClassName="!text-primary !bg-primary-light"
-              >
-                Upload Data
-              </NavLink>
 
               {/* Theme Toggle Button */}
               {mounted && (
@@ -159,14 +152,6 @@ export const Layout = ({ children }: LayoutProps) => {
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Insights
-              </NavLink>
-              <NavLink
-                to="/upload"
-                className="px-4 py-2 rounded-md text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
-                activeClassName="!text-primary !bg-primary-light"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Upload Data
               </NavLink>
             </nav>
           )}

@@ -11,15 +11,12 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
-# Copy application code
+# Copy application code and data
 COPY api ./api
 COPY data ./data
-COPY specsailor_universal_template.csv ./
-COPY start.sh ./
-RUN chmod +x start.sh
 
 # Expose port (Railway will set PORT env var)
 EXPOSE 8000
 
-# Start command - use startup script that handles PORT variable
-CMD ["./start.sh"]
+# Start command
+CMD python api/simple_api.py
