@@ -1,9 +1,12 @@
 # Nixpacks configuration for Python backend only
 [phases.setup]
-nixPkgs = ["python312"]
+nixPkgs = ["python312", "pip"]
 
 [phases.install]
-cmds = ["pip install -r requirements.txt"]
+cmds = ["python -m pip install --upgrade pip", "pip install -r requirements.txt"]
+
+[phases.build]
+cmds = ["echo 'No build step needed'"]
 
 [start]
 cmd = "uvicorn api.simple_api:app --host 0.0.0.0 --port $PORT"
