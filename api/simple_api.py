@@ -120,9 +120,10 @@ def get_predictions():
         }
 
 if __name__ == "__main__":
+    port = int(os.getenv("PORT", 8000))
     print('[INFO] Starting SpecSailor API...')
-    print('[INFO] API will be available at: http://localhost:8000')
-    print('[INFO] API docs at: http://localhost:8000/docs')
-    print('[INFO] Predictions endpoint: http://localhost:8000/api/v1/predictions')
+    print(f'[INFO] API will be available at: http://0.0.0.0:{port}')
+    print(f'[INFO] API docs at: http://0.0.0.0:{port}/docs')
+    print(f'[INFO] Predictions endpoint: http://0.0.0.0:{port}/api/v1/predictions')
 
-    uvicorn.run(app, host='0.0.0.0', port=8000)
+    uvicorn.run(app, host='0.0.0.0', port=port)
