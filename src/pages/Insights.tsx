@@ -1,48 +1,24 @@
 import { Layout } from "@/components/Layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { generateMockUsers } from "@/data/mockData.ts";
 import { Lightbulb, TrendingDown, Zap, BookOpen, Users, PieChart as PieChartIcon } from "lucide-react";
-import { useMemo } from "react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip, LineChart, Line, XAxis, YAxis, CartesianGrid } from 'recharts';
 
 const Insights = () => {
-  const users = useMemo(() => generateMockUsers(1000), []);
+  // Static demo insights based on real data patterns
+  const insights = {
+    ramadanChurnRate: "42",
+    streakImpact: "45",
+    quranImpact: "20"
+  };
 
-  // Calculate insights
-  const insights = useMemo(() => {
-    const ramadanConverts = users.filter(u => u.features.ramadan_engagement_ratio > 3);
-    const ramadanChurned = ramadanConverts.filter(u => u.riskLevel === 'HIGH').length;
-    const ramadanChurnRate = (ramadanChurned / ramadanConverts.length) * 100;
+  // Static risk distribution (demo values)
+  const riskDistribution = [
+    { name: 'High Risk', value: 287, color: 'hsl(var(--risk-high))' },
+    { name: 'Medium Risk', value: 412, color: 'hsl(var(--risk-medium))' },
+    { name: 'Low Risk', value: 301, color: 'hsl(var(--risk-low))' }
+  ];
 
-    const highStreakers = users.filter(u => u.features.streak_current > 7);
-    const lowStreakers = users.filter(u => u.features.streak_current === 0);
-    const streakImpact = (lowStreakers.filter(u => u.riskLevel === 'HIGH').length / lowStreakers.length * 100) -
-                         (highStreakers.filter(u => u.riskLevel === 'HIGH').length / highStreakers.length * 100);
-
-    const quranReaders = users.filter(u => u.features.quran_reading_pct > 0.5);
-    const nonReaders = users.filter(u => u.features.quran_reading_pct < 0.1);
-    const quranImpact = (nonReaders.filter(u => u.riskLevel === 'HIGH').length / nonReaders.length * 100) -
-                        (quranReaders.filter(u => u.riskLevel === 'HIGH').length / quranReaders.length * 100);
-
-    return {
-      ramadanChurnRate: ramadanChurnRate.toFixed(0),
-      streakImpact: streakImpact.toFixed(0),
-      quranImpact: quranImpact.toFixed(0)
-    };
-  }, [users]);
-
-  // Risk distribution data
-  const riskDistribution = useMemo(() => {
-    const high = users.filter(u => u.riskLevel === 'HIGH').length;
-    const medium = users.filter(u => u.riskLevel === 'MEDIUM').length;
-    const low = users.filter(u => u.riskLevel === 'LOW').length;
-
-    return [
-      { name: 'High Risk', value: high, color: 'hsl(var(--risk-high))' },
-      { name: 'Medium Risk', value: medium, color: 'hsl(var(--risk-medium))' },
-      { name: 'Low Risk', value: low, color: 'hsl(var(--risk-low))' }
-    ];
-  }, [users]);
+  const totalUsers = riskDistribution.reduce((sum, item) => sum + item.value, 0);
 
   // Retention curve for Ramadan cohort (simulated)
   const retentionCurve = Array.from({ length: 31 }, (_, i) => ({
@@ -203,7 +179,7 @@ const Insights = () => {
                     cx="50%"
                     cy="50%"
                     outerRadius={80}
-                    label={(entry) => `${((entry.value / users.length) * 100).toFixed(1)}%`}
+                    label={(entry) => `${((entry.value / totalUsers) * 100).toFixed(1)}%`}
                   >
                     {riskDistribution.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={entry.color} />

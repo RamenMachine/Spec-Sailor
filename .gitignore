@@ -42,3 +42,5 @@ data/processed/*.csv
 *.njsproj
 *.sln
 *.sw?
+
+.vercel
