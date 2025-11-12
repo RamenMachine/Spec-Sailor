@@ -63,7 +63,11 @@ def health():
 def root():
     return {
         'message': 'SpecSailor API - Navigate User Retention with Precision',
-        'docs': 'http://localhost:8000/docs'
+        'docs': '/docs',
+        'health': '/health',
+        'predictions': '/api/v1/predictions',
+        'upload': '/api/v1/upload',
+        'template': '/api/v1/template'
     }
 
 @app.get('/api/v1/predictions')
