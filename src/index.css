@@ -64,9 +64,10 @@ All colors MUST be HSL.
     --popover: 222.2 47% 13%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 145 65% 45%;
+    /* Teal primary color (more teal, less green) */
+    --primary: 185 70% 50%;
     --primary-foreground: 0 0% 100%;
-    --primary-light: 145 65% 15%;
+    --primary-light: 185 70% 20%;
 
     --secondary: 217.2 32.6% 17.5%;
     --secondary-foreground: 210 40% 98%;
@@ -74,22 +75,27 @@ All colors MUST be HSL.
     --muted: 217.2 32.6% 17.5%;
     --muted-foreground: 215 20.2% 65.1%;
 
-    --accent: 145 60% 50%;
+    /* Teal accent */
+    --accent: 185 65% 55%;
     --accent-foreground: 0 0% 100%;
 
-    --risk-high: 0 84% 60%;
+    /* Reddish purple for high risk (more reddish, less pure purple) */
+    --risk-high: 310 75% 65%;
     --risk-high-foreground: 0 0% 100%;
+    /* Yellow stays yellow for medium risk */
     --risk-medium: 45 93% 55%;
     --risk-medium-foreground: 0 0% 100%;
-    --risk-low: 145 65% 50%;
+    /* Teal for low risk (more teal, less green) */
+    --risk-low: 185 70% 55%;
     --risk-low-foreground: 0 0% 100%;
 
-    --destructive: 0 62.8% 30.6%;
+    --destructive: 310 70% 50%;
     --destructive-foreground: 210 40% 98%;
 
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
-    --ring: 145 65% 45%;
+    /* Teal ring */
+    --ring: 185 70% 50%;
   }
 }
 

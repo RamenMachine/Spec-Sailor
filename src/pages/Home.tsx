@@ -6,18 +6,59 @@ import { Button } from "@/components/ui/button";
 import { generateMockUsers, generateTrendData } from "@/data/mockData";
 import { Users, AlertTriangle, TrendingUp, Activity, Download, RefreshCw, Lightbulb } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { UserDetailModal } from "@/components/UserDetailModal";
 import { exportToCSV } from "@/utils/exportUtils";
 import { toast } from "sonner";
 
+interface ApiUser {
+  user_id: string;
+  churn_probability: number;
+  risk_level: 'HIGH' | 'MEDIUM' | 'LOW';
+  daysInactive: number;
+  topDriver: string;
+}
+
 const Home = () => {
   const navigate = useNavigate();
-  const users = useMemo(() => generateMockUsers(1000), []);
+  const [apiUsers, setApiUsers] = useState<any[]>([]);
+  const [isLoadingAPI, setIsLoadingAPI] = useState(true);
+  const [useAPI, setUseAPI] = useState(false);
+
+  const mockUsers = useMemo(() => generateMockUsers(1000), []);
   const trendData = useMemo(() => generateTrendData(), []);
-  const [selectedUser, setSelectedUser] = useState<typeof users[0] | null>(null);
+  const [selectedUser, setSelectedUser] = useState<any>(null);
   const [modalOpen, setModalOpen] = useState(false);
+
+  // Fetch from API
+  useEffect(() => {
+    const fetchFromAPI = async () => {
+      try {
+        const response = await fetch('http://localhost:8000/api/v1/predictions');
+        if (response.ok) {
+          const data = await response.json();
+          // API now returns complete user objects, use them directly
+          setApiUsers(data);
+          setUseAPI(true);
+          toast.success(`Loaded ${data.length} users from API!`);
+        } else {
+          console.log('API not available, using mock data');
+          setUseAPI(false);
+        }
+      } catch (error) {
+        console.log('API connection failed, using mock data');
+        setUseAPI(false);
+      } finally {
+        setIsLoadingAPI(false);
+      }
+    };
+
+    fetchFromAPI();
+  }, []);
+
+  // Only show data after API load attempt completes
+  const users = isLoadingAPI ? [] : (useAPI ? apiUsers : mockUsers);
 
   const handleExport = () => {
     const highRiskUsers = users.filter(u => u.riskLevel === 'HIGH');
@@ -25,12 +66,28 @@ const Home = () => {
     toast.success(`Exported ${highRiskUsers.length} high-risk users to CSV`);
   };
 
-  const handleRefresh = () => {
-    toast.success('Data refreshed successfully!');
-    window.location.reload();
+  const handleRefresh = async () => {
+    if (useAPI) {
+      setIsLoadingAPI(true);
+      try {
+        const response = await fetch('http://localhost:8000/api/v1/predictions');
+        if (response.ok) {
+          const data = await response.json();
+          setApiUsers(data);
+          toast.success('Data refreshed from API!');
+        }
+      } catch (error) {
+        toast.error('Failed to refresh from API');
+      } finally {
+        setIsLoadingAPI(false);
+      }
+    } else {
+      toast.success('Data refreshed successfully!');
+      window.location.reload();
+    }
   };
 
-  const handleUserClick = (user: typeof users[0]) => {
+  const handleUserClick = (user: any) => {
     setSelectedUser(user);
     setModalOpen(true);
   };
@@ -52,13 +109,33 @@ const Home = () => {
     };
   }, [users]);
 
-  const topAtRiskUsers = useMemo(() => 
+  const [showAllUsers, setShowAllUsers] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [riskFilter, setRiskFilter] = useState<'ALL' | 'HIGH' | 'MEDIUM' | 'LOW'>('ALL');
+  const usersPerPage = 50;
+
+  const topAtRiskUsers = useMemo(() =>
     users
       .filter(u => u.riskLevel === 'HIGH')
       .sort((a, b) => b.churnProbability - a.churnProbability)
       .slice(0, 10),
     [users]
   );
+
+  const filteredUsers = useMemo(() => {
+    const filtered = riskFilter === 'ALL'
+      ? users
+      : users.filter(u => u.riskLevel === riskFilter);
+    return filtered.sort((a, b) => b.churnProbability - a.churnProbability);
+  }, [users, riskFilter]);
+
+  const paginatedUsers = useMemo(() => {
+    const startIndex = (currentPage - 1) * usersPerPage;
+    const endIndex = startIndex + usersPerPage;
+    return filteredUsers.slice(startIndex, endIndex);
+  }, [filteredUsers, currentPage]);
+
+  const totalPages = Math.ceil(filteredUsers.length / usersPerPage);
 
   return (
     <Layout>
@@ -71,39 +148,53 @@ const Home = () => {
           </p>
         </div>
 
+        {/* Loading State */}
+        {isLoadingAPI && (
+          <Card>
+            <CardContent className="py-12">
+              <div className="flex flex-col items-center justify-center space-y-4">
+                <RefreshCw className="h-8 w-8 animate-spin text-primary" />
+                <p className="text-muted-foreground">Loading user data from API...</p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Metrics Grid */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <MetricCard
-            title="Total Users"
-            value={stats.total.toLocaleString()}
-            subtitle="Active user base"
-            icon={Users}
-          />
-          <MetricCard
-            title="High Risk"
-            value={stats.high.toLocaleString()}
-            subtitle={`${stats.highPct}% of total users`}
-            icon={AlertTriangle}
-            variant="high"
-            trend={{ value: -5, label: 'from yesterday' }}
-          />
-          <MetricCard
-            title="Medium Risk"
-            value={stats.medium.toLocaleString()}
-            subtitle={`${stats.mediumPct}% of total users`}
-            icon={TrendingUp}
-            variant="medium"
-            trend={{ value: 2, label: 'from yesterday' }}
-          />
-          <MetricCard
-            title="Low Risk"
-            value={stats.low.toLocaleString()}
-            subtitle={`${stats.lowPct}% of total users`}
-            icon={Activity}
-            variant="low"
-            trend={{ value: 3, label: 'from yesterday' }}
-          />
-        </div>
+        {!isLoadingAPI && (
+          <>
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+              <MetricCard
+                title="Total Users"
+                value={stats.total.toLocaleString()}
+                subtitle="Active user base"
+                icon={Users}
+              />
+              <MetricCard
+                title="High Risk"
+                value={stats.high.toLocaleString()}
+                subtitle={`${stats.highPct}% of total users`}
+                icon={AlertTriangle}
+                variant="high"
+                trend={{ value: -5, label: 'from yesterday' }}
+              />
+              <MetricCard
+                title="Medium Risk"
+                value={stats.medium.toLocaleString()}
+                subtitle={`${stats.mediumPct}% of total users`}
+                icon={TrendingUp}
+                variant="medium"
+                trend={{ value: 2, label: 'from yesterday' }}
+              />
+              <MetricCard
+                title="Low Risk"
+                value={stats.low.toLocaleString()}
+                subtitle={`${stats.lowPct}% of total users`}
+                icon={Activity}
+                variant="low"
+                trend={{ value: 3, label: 'from yesterday' }}
+              />
+            </div>
 
         {/* Churn Risk Trend Chart */}
         <Card>
@@ -160,13 +251,79 @@ const Home = () => {
           </CardContent>
         </Card>
 
-        {/* Top 10 At-Risk Users */}
+        {/* All Users Table */}
         <Card>
           <CardHeader>
-            <CardTitle>Top 10 At-Risk Users</CardTitle>
-            <CardDescription>
-              Users with highest churn probability requiring immediate attention
-            </CardDescription>
+            <div className="flex items-center justify-between flex-wrap gap-4">
+              <div>
+                <CardTitle>
+                  {showAllUsers
+                    ? `All Users (${filteredUsers.length}${riskFilter !== 'ALL' ? ` - ${riskFilter} Risk` : ''})`
+                    : 'Top 10 At-Risk Users'}
+                </CardTitle>
+                <CardDescription>
+                  {showAllUsers
+                    ? `Showing ${paginatedUsers.length} of ${filteredUsers.length} users`
+                    : 'Users with highest churn probability requiring immediate attention'}
+                </CardDescription>
+              </div>
+              <div className="flex gap-2 flex-wrap">
+                {showAllUsers && (
+                  <div className="flex gap-1">
+                    <Button
+                      variant={riskFilter === 'ALL' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => {
+                        setRiskFilter('ALL');
+                        setCurrentPage(1);
+                      }}
+                    >
+                      All ({stats.total})
+                    </Button>
+                    <Button
+                      variant={riskFilter === 'HIGH' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => {
+                        setRiskFilter('HIGH');
+                        setCurrentPage(1);
+                      }}
+                    >
+                      High ({stats.high})
+                    </Button>
+                    <Button
+                      variant={riskFilter === 'MEDIUM' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => {
+                        setRiskFilter('MEDIUM');
+                        setCurrentPage(1);
+                      }}
+                    >
+                      Medium ({stats.medium})
+                    </Button>
+                    <Button
+                      variant={riskFilter === 'LOW' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => {
+                        setRiskFilter('LOW');
+                        setCurrentPage(1);
+                      }}
+                    >
+                      Low ({stats.low})
+                    </Button>
+                  </div>
+                )}
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setShowAllUsers(!showAllUsers);
+                    setCurrentPage(1);
+                    setRiskFilter('ALL');
+                  }}
+                >
+                  {showAllUsers ? 'Show Top 10' : 'View All Users'}
+                </Button>
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
             <div className="overflow-x-auto">
@@ -181,9 +338,9 @@ const Home = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {topAtRiskUsers.map((user) => (
-                    <tr 
-                      key={user.userId} 
+                  {(showAllUsers ? paginatedUsers : topAtRiskUsers).map((user) => (
+                    <tr
+                      key={user.userId}
                       className="border-b hover:bg-muted/50 transition-colors cursor-pointer"
                       onClick={() => handleUserClick(user)}
                     >
@@ -199,6 +356,33 @@ const Home = () => {
                 </tbody>
               </table>
             </div>
+
+            {/* Pagination */}
+            {showAllUsers && totalPages > 1 && (
+              <div className="flex items-center justify-between mt-4 pt-4 border-t">
+                <div className="text-sm text-muted-foreground">
+                  Page {currentPage} of {totalPages}
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                    disabled={currentPage === 1}
+                  >
+                    Previous
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                    disabled={currentPage === totalPages}
+                  >
+                    Next
+                  </Button>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -228,6 +412,8 @@ const Home = () => {
             </div>
           </CardContent>
         </Card>
+          </>
+        )}
       </div>
 
       {/* User Detail Modal */}
