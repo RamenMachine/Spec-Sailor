@@ -9,9 +9,33 @@ from fastapi.responses import FileResponse
 import pandas as pd
 import uvicorn
 import os
+import sys
 from datetime import datetime
-from api.upload_handler import DataUploadHandler
-from api.feature_pipeline import AutoFeatureEngineer
+
+# Fix Python path for Railway/Docker deployment
+# Add parent directory to Python path so we can import api module
+# This works when running: python api/simple_api.py
+parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if parent_dir not in sys.path:
+    sys.path.insert(0, parent_dir)
+
+# Try imports with proper path handling
+try:
+    # Try absolute import (when running as module or with fixed path)
+    from api.upload_handler import DataUploadHandler
+    from api.feature_pipeline import AutoFeatureEngineer
+except ImportError:
+    try:
+        # Try relative import (when running from api directory)
+        from upload_handler import DataUploadHandler
+        from feature_pipeline import AutoFeatureEngineer
+    except ImportError:
+        # Last resort: add current directory to path
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        if current_dir not in sys.path:
+            sys.path.insert(0, current_dir)
+        from upload_handler import DataUploadHandler
+        from feature_pipeline import AutoFeatureEngineer
 
 app = FastAPI(title='SpecSailor API')
 
@@ -46,8 +70,22 @@ def root():
 def get_predictions():
     """Get all predictions from features.csv"""
     try:
-        # Load features
-        features_path = os.path.join('data', 'processed', 'features.csv')
+        # Load features - try multiple paths for Railway/Docker
+        possible_paths = [
+            os.path.join('data', 'processed', 'features.csv'),
+            os.path.join(os.getcwd(), 'data', 'processed', 'features.csv'),
+            os.path.join(os.path.dirname(__file__), '..', 'data', 'processed', 'features.csv')
+        ]
+        
+        features_path = None
+        for path in possible_paths:
+            if os.path.exists(path):
+                features_path = path
+                break
+        
+        if not features_path:
+            raise FileNotFoundError(f"Features file not found. Checked: {possible_paths}")
+        
         df = pd.read_csv(features_path)
 
         # Calculate churn probability (mock for now, will use actual model later)
@@ -262,6 +300,8 @@ async def download_results(job_id: str):
     """
     Download predictions as CSV file
     """
+    import tempfile
+
     if job_id not in upload_storage:
         raise HTTPException(404, "Job not found")
 
@@ -278,8 +318,9 @@ async def download_results(job_id: str):
 
     predictions_df['recommendation'] = predictions_df.apply(get_recommendation, axis=1)
 
-    # Save to temp file
-    output_path = f"/tmp/{job_id}_results.csv"
+    # Save to temp file using cross-platform temp directory
+    temp_dir = tempfile.gettempdir()
+    output_path = os.path.join(temp_dir, f"{job_id}_results.csv")
     predictions_df.to_csv(output_path, index=False)
 
     return FileResponse(
@@ -294,27 +335,26 @@ async def download_template():
     """
     Download CSV template for data upload
     """
-    template_data = {
-        'user_id': ['user-001', 'user-001', 'user-002', 'user-002'],
-        'event_timestamp': [
-            '2024-11-01 08:30:00',
-            '2024-11-01 09:00:00',
-            '2024-11-02 14:20:00',
-            '2024-11-02 15:00:00'
-        ],
-        'event_type': ['app_open', 'prayer_log', 'quran_read', 'donation'],
-        'session_duration': [300, None, 600, None],
-        'donation_amount': [None, None, None, 25.00]
-    }
-
-    template_df = pd.DataFrame(template_data)
-    output_path = "/tmp/data_template.csv"
-    template_df.to_csv(output_path, index=False)
+    # Try multiple possible paths for Railway/Docker deployment
+    possible_paths = [
+        os.path.join(os.path.dirname(__file__), '..', 'specsailor_universal_template.csv'),
+        os.path.join(os.getcwd(), 'specsailor_universal_template.csv'),
+        'specsailor_universal_template.csv'
+    ]
+    
+    template_path = None
+    for path in possible_paths:
+        if os.path.exists(path):
+            template_path = path
+            break
+    
+    if not template_path or not os.path.exists(template_path):
+        raise HTTPException(404, f"Template file not found. Checked: {possible_paths}")
 
     return FileResponse(
-        output_path,
+        template_path,
         media_type='text/csv',
-        filename="specsailor_data_template.csv"
+        filename="specsailor_universal_template.csv"
     )
 
 
