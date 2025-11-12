@@ -8,6 +8,7 @@ import Home from "./pages/Home";
 import Predictions from "./pages/Predictions";
 import Performance from "./pages/Performance";
 import Insights from "./pages/Insights";
+import Upload from "./pages/Upload";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -24,6 +25,7 @@ const App = () => (
             <Route path="/predictions" element={<Predictions />} />
             <Route path="/performance" element={<Performance />} />
             <Route path="/insights" element={<Insights />} />
+            <Route path="/upload" element={<Upload />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

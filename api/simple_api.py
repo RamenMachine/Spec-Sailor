@@ -3,13 +3,20 @@ Simplified FastAPI Server for React Integration
 Returns predictions from features.csv
 """
 
-from fastapi import FastAPI
+from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 import pandas as pd
 import uvicorn
 import os
+from datetime import datetime
+from api.upload_handler import DataUploadHandler
+from api.feature_pipeline import AutoFeatureEngineer
 
 app = FastAPI(title='SpecSailor API')
+
+# In-memory storage for uploaded data (use Redis/DB in production)
+upload_storage = {}
 
 # Enable CORS for React frontend
 app.add_middleware(
@@ -118,6 +125,198 @@ def get_predictions():
             'error': str(e),
             'message': 'Failed to load predictions from features.csv'
         }
+
+
+# ============================================================================
+# UPLOAD & ANALYSIS ENDPOINTS
+# ============================================================================
+
+@app.post("/api/v1/upload")
+async def upload_data(file: UploadFile = File(...)):
+    """
+    Upload user data file for analysis
+    Accepts CSV, Excel (.xlsx), or JSON files
+    """
+    try:
+        print(f"[INFO] Received upload: {file.filename}")
+
+        # Validate and parse
+        result = await DataUploadHandler.validate_and_parse(file)
+
+        # Store data in memory
+        upload_storage[result['upload_id']] = {
+            'data': result['data'],
+            'summary': result['summary'],
+            'status': 'uploaded',
+            'created_at': datetime.now().isoformat()
+        }
+
+        print(f"[OK] Upload {result['upload_id']} stored successfully")
+
+        return {
+            'upload_id': result['upload_id'],
+            'summary': result['summary'],
+            'validation': result['validation']
+        }
+
+    except HTTPException as he:
+        raise he
+    except Exception as e:
+        print(f"[ERROR] Upload failed: {e}")
+        raise HTTPException(500, f"Upload failed: {str(e)}")
+
+
+@app.post("/api/v1/analyze/{upload_id}")
+async def analyze_uploaded_data(upload_id: str):
+    """
+    Generate churn predictions for uploaded data
+    """
+    if upload_id not in upload_storage:
+        raise HTTPException(404, "Upload not found")
+
+    try:
+        print(f"[INFO] Analyzing upload: {upload_id}")
+
+        # Get uploaded data
+        raw_data = upload_storage[upload_id]['data']
+
+        # Run feature engineering
+        print("[INFO] Engineering features...")
+        features_df = AutoFeatureEngineer.engineer_features(raw_data)
+
+        # For now, use simple heuristics for prediction
+        # (In production, load actual XGBoost model)
+        print("[INFO] Generating predictions...")
+
+        # Simple heuristic: high days since last activity = high churn risk
+        features_df['churn_probability'] = features_df.apply(
+            lambda row: min(0.95, max(0.05, (
+                0.5 * (row['days_since_last_activity'] / 30) +
+                0.3 * (1 - row['events_last_7d'] / max(1, row['events_last_30d'])) +
+                0.2 * (row['days_since_last_prayer'] / 30)
+            ))),
+            axis=1
+        )
+
+        features_df['risk_level'] = features_df['churn_probability'].apply(
+            lambda x: 'HIGH' if x > 0.7 else ('MEDIUM' if x > 0.4 else 'LOW')
+        )
+
+        # Store results
+        upload_storage[upload_id]['predictions'] = features_df
+        upload_storage[upload_id]['status'] = 'completed'
+
+        print(f"[OK] Analysis complete for {len(features_df)} users")
+
+        return {
+            'job_id': upload_id,
+            'status': 'completed',
+            'summary': {
+                'total_users': int(len(features_df)),
+                'high_risk': int(len(features_df[features_df['risk_level'] == 'HIGH'])),
+                'medium_risk': int(len(features_df[features_df['risk_level'] == 'MEDIUM'])),
+                'low_risk': int(len(features_df[features_df['risk_level'] == 'LOW']))
+            }
+        }
+
+    except Exception as e:
+        print(f"[ERROR] Analysis failed: {e}")
+        upload_storage[upload_id]['status'] = 'failed'
+        upload_storage[upload_id]['error'] = str(e)
+        raise HTTPException(500, f"Analysis failed: {str(e)}")
+
+
+@app.get("/api/v1/results/{job_id}")
+async def get_analysis_results(job_id: str):
+    """
+    Get predictions for analyzed upload
+    """
+    if job_id not in upload_storage:
+        raise HTTPException(404, "Job not found")
+
+    if upload_storage[job_id]['status'] != 'completed':
+        return {
+            'status': upload_storage[job_id]['status'],
+            'message': 'Analysis not completed'
+        }
+
+    predictions_df = upload_storage[job_id]['predictions']
+
+    # Convert to API response format
+    predictions = predictions_df.to_dict('records')
+
+    return {
+        'predictions': predictions[:100],  # Limit to first 100 for performance
+        'summary': {
+            'total_users': int(len(predictions_df)),
+            'avg_churn_probability': float(predictions_df['churn_probability'].mean()),
+            'high_risk_count': int(len(predictions_df[predictions_df['risk_level'] == 'HIGH'])),
+            'medium_risk_count': int(len(predictions_df[predictions_df['risk_level'] == 'MEDIUM'])),
+            'low_risk_count': int(len(predictions_df[predictions_df['risk_level'] == 'LOW']))
+        }
+    }
+
+
+@app.get("/api/v1/download/{job_id}")
+async def download_results(job_id: str):
+    """
+    Download predictions as CSV file
+    """
+    if job_id not in upload_storage:
+        raise HTTPException(404, "Job not found")
+
+    predictions_df = upload_storage[job_id]['predictions'].copy()
+
+    # Add recommendations
+    def get_recommendation(row):
+        if row['risk_level'] == 'HIGH':
+            return "Immediate intervention: Personal outreach within 24h"
+        elif row['risk_level'] == 'MEDIUM':
+            return "Monitor closely: Send engagement email this week"
+        else:
+            return "Maintain: Continue regular communication"
+
+    predictions_df['recommendation'] = predictions_df.apply(get_recommendation, axis=1)
+
+    # Save to temp file
+    output_path = f"/tmp/{job_id}_results.csv"
+    predictions_df.to_csv(output_path, index=False)
+
+    return FileResponse(
+        output_path,
+        media_type='text/csv',
+        filename=f"churn_predictions_{job_id}.csv"
+    )
+
+
+@app.get("/api/v1/template")
+async def download_template():
+    """
+    Download CSV template for data upload
+    """
+    template_data = {
+        'user_id': ['user-001', 'user-001', 'user-002', 'user-002'],
+        'event_timestamp': [
+            '2024-11-01 08:30:00',
+            '2024-11-01 09:00:00',
+            '2024-11-02 14:20:00',
+            '2024-11-02 15:00:00'
+        ],
+        'event_type': ['app_open', 'prayer_log', 'quran_read', 'donation'],
+        'session_duration': [300, None, 600, None],
+        'donation_amount': [None, None, None, 25.00]
+    }
+
+    template_df = pd.DataFrame(template_data)
+    output_path = "/tmp/data_template.csv"
+    template_df.to_csv(output_path, index=False)
+
+    return FileResponse(
+        output_path,
+        media_type='text/csv',
+        filename="specsailor_data_template.csv"
+    )
+
 
 if __name__ == "__main__":
     port = int(os.getenv("PORT", 8000))
