@@ -14,9 +14,12 @@ RUN pip install --no-cache-dir --upgrade pip && \
 # Copy application code
 COPY api ./api
 COPY data ./data
+COPY specsailor_universal_template.csv ./
+COPY start.sh ./
+RUN chmod +x start.sh
 
 # Expose port (Railway will set PORT env var)
 EXPOSE 8000
 
-# Start command - use shell form to allow PORT variable substitution
-CMD ["sh", "-c", "uvicorn api.simple_api:app --host 0.0.0.0 --port ${PORT:-8000}"]
+# Start command - use startup script that handles PORT variable
+CMD ["./start.sh"]
