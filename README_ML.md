@@ -1,4 +1,4 @@
-# 🌙 Spec Sailor - Islamic App User Retention Prediction
+# 🌙 Spec Sailor - App User Retention Prediction
 
 > ML-powered churn prediction system for Islamic mobile applications
 
