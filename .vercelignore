@@ -1,0 +1,22 @@
+# Ignore Python backend files for Vercel frontend deployment
+# Only ignore root-level api directory (not src/)
+/api/
+/venv/
+# Ignore Python files (TypeScript files in src/data/ will be included)
+*.py
+# Ignore root data directory files but allow src/data/
+/data/*.json
+/data/*.csv
+/data/models/
+/data/raw/
+/data/processed/
+requirements.txt
+Dockerfile
+Procfile
+railway.toml
+nixpacks.toml
+start.sh
+*.pyc
+__pycache__/
+.python-version
+

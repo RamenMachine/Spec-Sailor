@@ -1,0 +1,54 @@
+# Python
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+venv/
+env/
+ENV/
+
+# Node
+node_modules/
+npm-debug.log
+yarn-error.log
+dist/
+build/
+
+# Git
+.git
+.gitignore
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# Documentation
+*.md
+!README.md
+
+# Frontend files (not needed for backend)
+src/
+public/
+index.html
+vite.config.ts
+tsconfig.json
+package.json
+package-lock.json
+postcss.config.js
+tailwind.config.ts
+components.json
+
+# Large data files
+data/raw/*.csv
+data/raw/*.json
+
+# Environment
+.env
+.env.*
+
+# Misc
+.DS_Store
+*.log
