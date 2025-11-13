@@ -459,15 +459,19 @@ $$\text{CLR} = \frac{\text{TotalCharges}}{\text{MonthlyCharges} \times \text{ten
 Where tenure is in months.
 
 **Service Penetration Rate:**
-$$\text{SPR} = \frac{\text{total\_services}}{9}$$
+$$\text{SPR} = \frac{N_{\text{services}}}{9}$$
+
+Where $N_{\text{services}}$ is the total number of services (0-9).
 
 **Billing Risk Score:**
-$$\text{BRS} = 0.3 \times \text{paperless} + 0.5 \times \text{electronic\_check} + 0.4 \times \text{monthly\_contract}$$
+$$\text{BRS} = 0.3 \times I_{\text{paperless}} + 0.5 \times I_{\text{electronic}} + 0.4 \times I_{\text{monthly}}$$
 
-Normalized to [0, 1] range.
+Where $I$ are indicator variables (0 or 1). Normalized to [0, 1] range.
 
 **Service Satisfaction Score:**
-$$\text{SSS} = 0.2 \times \text{fiber\_optic} + 0.1 \times \text{DSL} + 0.3 \times \frac{\text{security\_services}}{3} + 0.2 \times \frac{\text{streaming\_services}}{2} + 0.15 \times \text{tech\_support} + 0.15 \times \text{SPR}$$
+$$\text{SSS} = 0.2 \times I_{\text{fiber}} + 0.1 \times I_{\text{DSL}} + 0.3 \times \frac{S_{\text{security}}}{3} + 0.2 \times \frac{S_{\text{streaming}}}{2} + 0.15 \times I_{\text{tech}} + 0.15 \times \text{SPR}$$
+
+Where $I$ are indicator variables and $S$ are service counts.
 
 ### Churn Probability
 
