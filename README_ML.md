@@ -1,4 +1,4 @@
-# 🌙 Barakah Retain - Islamic App User Retention Prediction
+# 🌙 Spec Sailor - Islamic App User Retention Prediction
 
 > ML-powered churn prediction system for Islamic mobile applications
 
