@@ -1,4 +1,4 @@
-// TypeScript types for ChurnGuard Pro API
+// TypeScript types for SpecSailor API
 
 export interface PredictionData {
   customerId: string;

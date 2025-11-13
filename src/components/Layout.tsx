@@ -38,8 +38,8 @@ export const Layout = ({ children }: LayoutProps) => {
                 <Moon className="h-6 w-6 text-primary-foreground" />
               </div>
               <div>
-                <h1 className="text-xl font-bold text-foreground">ChurnGuard Pro</h1>
-                <p className="text-xs text-muted-foreground">Protecting Your Customer Base</p>
+                <h1 className="text-xl font-bold text-foreground">SpecSailor</h1>
+                <p className="text-xs text-muted-foreground">XGBoost Churn Prediction</p>
               </div>
             </div>
             
