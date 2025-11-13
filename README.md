@@ -702,9 +702,9 @@ MIT License - feel free to use for your telecommunications business!
 ## 👨‍💻 Author
 
 **Your Name**
-- GitHub: [@yourusername](https://github.com/yourusername)
-- LinkedIn: [Your Profile](https://linkedin.com/in/yourprofile)
-- Portfolio: [Your Website](https://yourwebsite.com)
+- GitHub: [@AmeenRahman](https://github.com/RamenMachine))
+- LinkedIn: [Ameen Rahman](https://www.linkedin.com/in/ameen-rahman-789947252/))
+- Portfolio: [Portfolio](https://www.ameenrahman.info)
 
 ---
 
