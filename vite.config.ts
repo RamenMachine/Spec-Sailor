@@ -3,8 +3,8 @@ import react from "@vitejs/plugin-react-swc";
 import path from "path";
 
 // https://vitejs.dev/config/
-export default defineConfig({
-  base: process.env.NODE_ENV === 'production' ? '/spec-sailor/' : '/',
+export default defineConfig(({ mode }) => ({
+  base: mode === 'production' ? '/spec-sailor/' : '/',
   server: {
     host: "::",
     port: 8080,
@@ -15,4 +15,4 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
-});
+}));
