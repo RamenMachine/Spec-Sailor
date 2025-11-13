@@ -2,7 +2,7 @@
 
 ### Machine Learning-Powered Telco Customer Churn Prediction System
 
-**🔗 [Live Demo on GitHub Pages](https://yourusername.github.io/spec-sailor)** | [View Source Code](https://github.com/yourusername/spec-sailor)
+**🔗 [Live Demo on GitHub Pages](https://ramenmachine.github.io/Spec-Sailor/)** | [View Source Code](https://github.com/RamenMachine/Spec-Sailor)
 
 [![Python](https://img.shields.io/badge/Python-3.12-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
 [![XGBoost](https://img.shields.io/badge/XGBoost-2.0.3-FF6F00?style=for-the-badge&logo=xgboost&logoColor=white)](https://xgboost.ai/)
@@ -397,7 +397,7 @@ This will:
 
 4. **Your site will be live at:**
    ```
-   https://yourusername.github.io/spec-sailor
+   https://ramenmachine.github.io/Spec-Sailor/
    ```
 
 **Note:** The backend API (`api/simple_api.py`) runs locally. For production, you would deploy it separately (e.g., Heroku, Render, or Railway) and update the API URL in the frontend environment variables.
@@ -435,26 +435,28 @@ Where:
 ### Evaluation Metrics
 
 **Accuracy:**
-$$\text{Accuracy} = \frac{TP + TN}{TP + TN + FP + FN}$$
+$$\text{Accuracy} = \frac{\text{TP} + \text{TN}}{\text{TP} + \text{TN} + \text{FP} + \text{FN}}$$
 
 **Precision:**
-$$\text{Precision} = \frac{TP}{TP + FP}$$
+$$\text{Precision} = \frac{\text{TP}}{\text{TP} + \text{FP}}$$
 
 **Recall (Sensitivity):**
-$$\text{Recall} = \frac{TP}{TP + FN}$$
+$$\text{Recall} = \frac{\text{TP}}{\text{TP} + \text{FN}}$$
 
 **F1-Score:**
 $$\text{F1} = 2 \times \frac{\text{Precision} \times \text{Recall}}{\text{Precision} + \text{Recall}}$$
 
 **ROC-AUC:**
-$$\text{AUC} = \int_0^1 TPR(FPR^{-1}(x)) dx$$
+$$\text{AUC} = \int_0^1 \text{TPR}(\text{FPR}^{-1}(x)) dx$$
 
 Where TPR = True Positive Rate, FPR = False Positive Rate
 
 ### Feature Engineering Formulas
 
 **Customer Lifetime Ratio:**
-$$\text{CLR} = \frac{\text{TotalCharges}}{\text{MonthlyCharges} \times \text{tenure\_months}}$$
+$$\text{CLR} = \frac{\text{TotalCharges}}{\text{MonthlyCharges} \times \text{tenure}}$$
+
+Where tenure is in months.
 
 **Service Penetration Rate:**
 $$\text{SPR} = \frac{\text{total\_services}}{9}$$
@@ -476,9 +478,9 @@ $$P(\text{churn} = 1 | x) = \frac{1}{1 + e^{-\hat{y}}}$$
 Where $\hat{y}$ is the raw XGBoost score.
 
 **Risk Level Classification:**
-- **HIGH:** $P(\text{churn}) \geq 0.70$
-- **MEDIUM:** $0.30 \leq P(\text{churn}) < 0.70$
-- **LOW:** $P(\text{churn}) < 0.30$
+- **HIGH:** $P(\text{churn} = 1) \geq 0.70$
+- **MEDIUM:** $0.30 \leq P(\text{churn} = 1) < 0.70$
+- **LOW:** $P(\text{churn} = 1) < 0.30$
 
 ---
 
@@ -603,10 +605,10 @@ MIT License - feel free to use for your telecommunications business!
 
 ## 👨‍💻 Author
 
-**Your Name**
-- GitHub: [@AmeenRahman](https://github.com/RamenMachine))
-- LinkedIn: [Ameen Rahman](https://www.linkedin.com/in/ameen-rahman-789947252/))
-- Portfolio: [Portfolio](https://www.ameenrahman.info)
+**Ameen Rahman**
+- GitHub: [@RamenMachine](https://github.com/RamenMachine)
+- LinkedIn: [Ameen Rahman](https://www.linkedin.com/in/ameen-rahman-789947252/)
+- Portfolio: [ameenrahman.info](https://www.ameenrahman.info)
 
 ---
 
