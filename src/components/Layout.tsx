@@ -38,8 +38,8 @@ export const Layout = ({ children }: LayoutProps) => {
                 <Moon className="h-6 w-6 text-primary-foreground" />
               </div>
               <div>
-                <h1 className="text-xl font-bold text-foreground">SpecSailor</h1>
-                <p className="text-xs text-muted-foreground">Navigate User Retention with Precision</p>
+                <h1 className="text-xl font-bold text-foreground">ChurnGuard Pro</h1>
+                <p className="text-xs text-muted-foreground">Protecting Your Customer Base</p>
               </div>
             </div>
             
@@ -57,7 +57,7 @@ export const Layout = ({ children }: LayoutProps) => {
                 className="px-4 py-2 rounded-md text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
                 activeClassName="!text-primary !bg-primary-light"
               >
-                User Predictions
+                Customer Predictions
               </NavLink>
               <NavLink
                 to="/performance"
@@ -135,7 +135,7 @@ export const Layout = ({ children }: LayoutProps) => {
                 activeClassName="!text-primary !bg-primary-light"
                 onClick={() => setMobileMenuOpen(false)}
               >
-                User Predictions
+                Customer Predictions
               </NavLink>
               <NavLink
                 to="/performance"

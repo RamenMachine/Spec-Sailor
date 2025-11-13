@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { generateMockUsers, RiskLevel } from "@/data/mockData.ts";
+import { generateMockUsers, RiskLevel } from "@/data/mockData";
 import { Search, Filter, Download, ArrowUpDown } from "lucide-react";
 import { useMemo, useState } from "react";
 import { UserDetailModal } from "@/components/UserDetailModal";
@@ -17,18 +17,24 @@ const Predictions = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [riskFilter, setRiskFilter] = useState<string>("all");
   const [subscriptionFilter, setSubscriptionFilter] = useState<string>("all");
-  const [sortField, setSortField] = useState<'probability' | 'inactive' | 'userId'>('probability');
+  const [sortField, setSortField] = useState<'probability' | 'inactive' | 'userId' | 'tenure'>('probability');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const [selectedUser, setSelectedUser] = useState<typeof allUsers[0] | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
 
   const filteredUsers = useMemo(() => {
     let filtered = allUsers.filter(user => {
-      const matchesSearch = user.userId.toLowerCase().includes(searchQuery.toLowerCase());
+      const customerId = (user.customerId || user.userId || '').toLowerCase();
+      const matchesSearch = customerId.includes(searchQuery.toLowerCase());
       const matchesRisk = riskFilter === "all" || user.riskLevel === riskFilter;
-      const matchesSubscription = subscriptionFilter === "all" || user.subscriptionType === subscriptionFilter;
+      const contractType = (user.contractType || user.subscriptionType || '').toLowerCase();
+      const matchesContract = subscriptionFilter === "all" || 
+        (subscriptionFilter === "monthly" && contractType.includes("month")) ||
+        (subscriptionFilter === "yearly" && contractType.includes("year")) ||
+        (subscriptionFilter === "biennial" && contractType.includes("two")) ||
+        contractType === subscriptionFilter;
       
-      return matchesSearch && matchesRisk && matchesSubscription;
+      return matchesSearch && matchesRisk && matchesContract;
     });
 
     // Apply sorting
@@ -38,15 +44,15 @@ const Predictions = () => {
       if (sortField === 'probability') {
         aVal = a.churnProbability;
         bVal = b.churnProbability;
-      } else if (sortField === 'inactive') {
-        aVal = a.daysInactive;
-        bVal = b.daysInactive;
+      } else if (sortField === 'inactive' || sortField === 'tenure') {
+        aVal = a.tenureMonths || a.daysInactive || 0;
+        bVal = b.tenureMonths || b.daysInactive || 0;
       } else {
-        aVal = a.userId;
-        bVal = b.userId;
+        aVal = a.customerId || a.userId || '';
+        bVal = b.customerId || b.userId || '';
         return sortDirection === 'asc' 
-          ? aVal.localeCompare(bVal)
-          : bVal.localeCompare(aVal);
+          ? String(aVal).localeCompare(String(bVal))
+          : String(bVal).localeCompare(String(aVal));
       }
       
       return sortDirection === 'asc' ? aVal - bVal : bVal - aVal;
@@ -66,7 +72,7 @@ const Predictions = () => {
 
   const handleExport = () => {
     exportToCSV(filteredUsers, 'filtered-predictions.csv');
-    toast.success(`Exported ${filteredUsers.length} users to CSV`);
+      toast.success(`Exported ${filteredUsers.length} customers to CSV`);
   };
 
   const handleUserClick = (user: typeof allUsers[0]) => {
@@ -79,9 +85,9 @@ const Predictions = () => {
       <div className="space-y-6">
         {/* Page Header */}
         <div>
-          <h2 className="text-3xl font-bold text-foreground">User Predictions</h2>
+          <h2 className="text-3xl font-bold text-foreground">Customer Predictions</h2>
           <p className="text-muted-foreground mt-1">
-            Browse and filter all user churn predictions
+            Browse and filter all customer churn predictions
           </p>
         </div>
 
@@ -93,17 +99,17 @@ const Predictions = () => {
               <CardTitle>Filters</CardTitle>
             </div>
             <CardDescription>
-              Refine the user list based on your criteria
+              Refine the customer list based on your criteria
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid gap-4 md:grid-cols-3">
               <div className="space-y-2">
-                <label className="text-sm font-medium text-foreground">Search User ID</label>
+                <label className="text-sm font-medium text-foreground">Search Customer ID</label>
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
-                    placeholder="e.g., user-0001"
+                    placeholder="e.g., 7590-VHVEG"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="pl-9"
@@ -127,16 +133,16 @@ const Predictions = () => {
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium text-foreground">Subscription</label>
+                <label className="text-sm font-medium text-foreground">Contract Type</label>
                 <Select value={subscriptionFilter} onValueChange={setSubscriptionFilter}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Subscriptions</SelectItem>
-                    <SelectItem value="free">Free</SelectItem>
-                    <SelectItem value="basic">Basic</SelectItem>
-                    <SelectItem value="premium">Premium</SelectItem>
+                    <SelectItem value="all">All Contracts</SelectItem>
+                    <SelectItem value="monthly">Month-to-month</SelectItem>
+                    <SelectItem value="yearly">One year</SelectItem>
+                    <SelectItem value="biennial">Two year</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -144,7 +150,7 @@ const Predictions = () => {
 
             <div className="mt-4 flex items-center justify-between">
               <span className="text-sm text-muted-foreground">
-                Showing {filteredUsers.length} of {allUsers.length} users
+                Showing {filteredUsers.length} of {allUsers.length} customers
               </span>
               <Button variant="outline" size="sm" className="gap-2" onClick={handleExport}>
                 <Download className="h-4 w-4" />
@@ -157,9 +163,9 @@ const Predictions = () => {
         {/* Users Table */}
         <Card>
           <CardHeader>
-            <CardTitle>User List</CardTitle>
+            <CardTitle>Customer List</CardTitle>
             <CardDescription>
-              Click on any user to view detailed predictions and explanations
+              Click on any customer to view detailed predictions and explanations
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -172,7 +178,7 @@ const Predictions = () => {
                       onClick={() => handleSort('userId')}
                     >
                       <div className="flex items-center gap-1">
-                        User ID
+                        Customer ID
                         <ArrowUpDown className="h-3 w-3" />
                       </div>
                     </th>
@@ -191,34 +197,34 @@ const Predictions = () => {
                       onClick={() => handleSort('inactive')}
                     >
                       <div className="flex items-center gap-1">
-                        Days Inactive
+                        Tenure (Months)
                         <ArrowUpDown className="h-3 w-3" />
                       </div>
                     </th>
-                    <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Last Active</th>
-                    <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Subscription</th>
+                    <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Signup Date</th>
+                    <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Contract Type</th>
                     <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Top Driver</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredUsers.slice(0, 50).map((user) => (
                     <tr 
-                      key={user.userId} 
+                      key={user.customerId || user.userId} 
                       className="border-b hover:bg-muted/50 transition-colors cursor-pointer"
                       onClick={() => handleUserClick(user)}
                     >
-                      <td className="py-3 px-4 text-sm font-mono">{user.userId}</td>
+                      <td className="py-3 px-4 text-sm font-mono">{user.customerId || user.userId}</td>
                       <td className="py-3 px-4">
                         <RiskBadge level={user.riskLevel} />
                       </td>
                       <td className="py-3 px-4 text-sm font-semibold">
                         {(user.churnProbability * 100).toFixed(1)}%
                       </td>
-                      <td className="py-3 px-4 text-sm">{user.daysInactive} days</td>
-                      <td className="py-3 px-4 text-sm">{user.lastActive}</td>
+                      <td className="py-3 px-4 text-sm">{user.tenureMonths || user.daysInactive || 0} months</td>
+                      <td className="py-3 px-4 text-sm">{user.signupDate || user.lastActive}</td>
                       <td className="py-3 px-4">
                         <Badge variant="outline" className="capitalize">
-                          {user.subscriptionType}
+                          {user.contractType || user.subscriptionType}
                         </Badge>
                       </td>
                       <td className="py-3 px-4 text-sm text-muted-foreground">

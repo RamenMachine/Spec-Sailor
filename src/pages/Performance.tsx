@@ -2,7 +2,7 @@ import { Layout } from "@/components/Layout";
 import { MetricCard } from "@/components/MetricCard";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { modelMetrics, featureImportance, confusionMatrix } from "@/data/mockData.ts";
+import { modelMetrics, featureImportance, confusionMatrix } from "@/data/mockData";
 import { Target, TrendingUp, Activity, Award, Download } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
 import { exportModelReport } from "@/utils/exportUtils";
@@ -22,20 +22,20 @@ const Performance = () => {
     { name: 'False Negative', value: confusionMatrix.falseNegative, color: 'hsl(var(--risk-high))' }
   ];
 
-  // Feature names mapping
+  // Feature names mapping for Telco features
   const featureNames: Record<string, string> = {
-    'days_since_last_session': 'Days Since Last Session',
-    'ramadan_engagement_ratio': 'Ramadan Engagement Ratio',
-    'session_frequency_7d': 'Session Frequency (7d)',
-    'streak_current': 'Current Streak',
-    'quran_reading_pct': 'Quran Reading %',
-    'prayer_time_interaction_rate': 'Prayer Time Interaction',
-    'session_frequency_30d': 'Session Frequency (30d)',
-    'last_10_nights_sessions': 'Last 10 Nights Sessions',
-    'jummah_participation_rate': 'Jummah Participation',
-    'content_diversity_score': 'Content Diversity',
-    'lecture_watch_minutes': 'Lecture Watch Time',
-    'friends_count': 'Friends Count'
+    'tenure_months': 'Tenure (Months)',
+    'contract_type_Month-to-month': 'Month-to-month Contract',
+    'payment_method_Electronic check': 'Electronic Check Payment',
+    'monthly_charges': 'Monthly Charges',
+    'total_services': 'Total Services',
+    'is_monthly_contract': 'Monthly Contract',
+    'billing_risk_score': 'Billing Risk Score',
+    'early_lifecycle_risk': 'Early Lifecycle Risk',
+    'total_charges': 'Total Charges',
+    'service_penetration_rate': 'Service Penetration Rate',
+    'has_premium_internet': 'Premium Internet (Fiber)',
+    'payment_reliability_score': 'Payment Reliability'
   };
 
   const featureChartData = featureImportance.map(f => ({
@@ -50,7 +50,7 @@ const Performance = () => {
         <div>
           <h2 className="text-3xl font-bold text-foreground">Model Performance</h2>
           <p className="text-muted-foreground mt-1">
-            XGBoost model metrics and evaluation results
+            XGBoost model metrics and evaluation results for Telco customer churn prediction
           </p>
         </div>
 
@@ -59,7 +59,7 @@ const Performance = () => {
           <MetricCard
             title="Accuracy"
             value={`${(modelMetrics.accuracy * 100).toFixed(1)}%`}
-            subtitle="Target: >85%"
+            subtitle="Target: >80%"
             icon={Target}
             variant="low"
           />
@@ -73,14 +73,14 @@ const Performance = () => {
           <MetricCard
             title="Recall"
             value={`${(modelMetrics.recall * 100).toFixed(1)}%`}
-            subtitle="Target: >75%"
+            subtitle="Target: >70%"
             icon={Activity}
             variant="low"
           />
           <MetricCard
             title="ROC-AUC"
             value={modelMetrics.rocAuc.toFixed(2)}
-            subtitle="Target: >0.90"
+            subtitle="Target: >0.85"
             icon={Award}
             variant="low"
           />
@@ -120,15 +120,15 @@ const Performance = () => {
               <div className="space-y-3">
                 <div className="p-4 rounded-lg bg-primary-light border border-primary/20">
                   <h4 className="font-semibold text-sm text-primary mb-1">True Positives: {confusionMatrix.truePositive}</h4>
-                  <p className="text-xs text-muted-foreground">Users correctly predicted as churners</p>
+                  <p className="text-xs text-muted-foreground">Customers correctly predicted as churners</p>
                 </div>
                 <div className="p-4 rounded-lg bg-risk-medium/10 border border-risk-medium/20">
                   <h4 className="font-semibold text-sm text-risk-medium mb-1">False Positives: {confusionMatrix.falsePositive}</h4>
-                  <p className="text-xs text-muted-foreground">Active users incorrectly flagged as churners</p>
+                  <p className="text-xs text-muted-foreground">Active customers incorrectly flagged as churners</p>
                 </div>
                 <div className="p-4 rounded-lg bg-primary-light border border-primary/20">
                   <h4 className="font-semibold text-sm text-primary mb-1">True Negatives: {confusionMatrix.trueNegative}</h4>
-                  <p className="text-xs text-muted-foreground">Active users correctly predicted as staying</p>
+                  <p className="text-xs text-muted-foreground">Active customers correctly predicted as staying</p>
                 </div>
                 <div className="p-4 rounded-lg bg-risk-high/10 border border-risk-high/20">
                   <h4 className="font-semibold text-sm text-risk-high mb-1">False Negatives: {confusionMatrix.falseNegative}</h4>
@@ -173,10 +173,10 @@ const Performance = () => {
             <div className="mt-6 p-4 bg-secondary rounded-lg">
               <h4 className="font-semibold text-sm mb-2">Key Insights:</h4>
               <ul className="text-sm space-y-1 text-muted-foreground">
-                <li>• <span className="font-medium text-foreground">Days Since Last Session</span> is the strongest predictor (18% importance)</li>
-                <li>• <span className="font-medium text-foreground">Ramadan Engagement Ratio</span> reveals seasonal user patterns (15% importance)</li>
-                <li>• <span className="font-medium text-foreground">Recent Activity Metrics</span> (7d frequency, streak) are critical for early detection</li>
-                <li>• <span className="font-medium text-foreground">Islamic Content Engagement</span> (Quran, prayer times) correlates with retention</li>
+                <li>• <span className="font-medium text-foreground">Contract Type</span> is the strongest predictor - month-to-month customers churn more</li>
+                <li>• <span className="font-medium text-foreground">Tenure</span> reveals lifecycle patterns - new customers are at higher risk</li>
+                <li>• <span className="font-medium text-foreground">Payment Method</span> (electronic check) is a key churn indicator</li>
+                <li>• <span className="font-medium text-foreground">Monthly Charges</span> and service bundle completeness correlate with retention</li>
               </ul>
             </div>
           </CardContent>
@@ -206,11 +206,11 @@ const Performance = () => {
               <div className="space-y-3">
                 <div>
                   <h4 className="text-sm font-medium text-muted-foreground">Test Set Size</h4>
-                  <p className="text-base font-semibold">2,000 users (20%)</p>
+                  <p className="text-base font-semibold">1,407 customers (20%)</p>
                 </div>
                 <div>
                   <h4 className="text-sm font-medium text-muted-foreground">Feature Count</h4>
-                  <p className="text-base font-semibold">32 engineered features</p>
+                  <p className="text-base font-semibold">60+ engineered features</p>
                 </div>
                 <div>
                   <h4 className="text-sm font-medium text-muted-foreground">Retraining Schedule</h4>

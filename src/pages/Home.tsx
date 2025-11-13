@@ -3,7 +3,7 @@ import { MetricCard } from "@/components/MetricCard";
 import { RiskBadge } from "@/components/RiskBadge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { generateMockUsers, generateTrendData } from "@/data/mockData.ts";
+import { generateMockUsers, generateTrendData } from "@/data/mockData";
 import { Users, AlertTriangle, TrendingUp, Activity, Download, RefreshCw, Lightbulb } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { useMemo, useState, useEffect } from "react";
@@ -62,8 +62,8 @@ const Home = () => {
 
   const handleExport = () => {
     const highRiskUsers = users.filter(u => u.riskLevel === 'HIGH');
-    exportToCSV(highRiskUsers, 'high-risk-users.csv');
-    toast.success(`Exported ${highRiskUsers.length} high-risk users to CSV`);
+    exportToCSV(highRiskUsers, 'high-risk-customers.csv');
+      toast.success(`Exported ${highRiskUsers.length} high-risk customers to CSV`);
   };
 
   const handleRefresh = async () => {
@@ -144,7 +144,7 @@ const Home = () => {
         <div>
           <h2 className="text-3xl font-bold text-foreground">Dashboard Overview</h2>
           <p className="text-muted-foreground mt-1">
-            Monitor user retention and churn predictions in real-time
+            Monitor customer churn predictions and retention strategies in real-time
           </p>
         </div>
 
@@ -154,7 +154,7 @@ const Home = () => {
             <CardContent className="py-12">
               <div className="flex flex-col items-center justify-center space-y-4">
                 <RefreshCw className="h-8 w-8 animate-spin text-primary" />
-                <p className="text-muted-foreground">Loading user data from API...</p>
+                <p className="text-muted-foreground">Loading customer data from API...</p>
               </div>
             </CardContent>
           </Card>
@@ -165,15 +165,15 @@ const Home = () => {
           <>
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
               <MetricCard
-                title="Total Users"
+                title="Total Customers"
                 value={stats.total.toLocaleString()}
-                subtitle="Active user base"
+                subtitle="Active customer base"
                 icon={Users}
               />
               <MetricCard
                 title="High Risk"
                 value={stats.high.toLocaleString()}
-                subtitle={`${stats.highPct}% of total users`}
+                subtitle={`${stats.highPct}% of total customers`}
                 icon={AlertTriangle}
                 variant="high"
                 trend={{ value: -5, label: 'from yesterday' }}
@@ -181,7 +181,7 @@ const Home = () => {
               <MetricCard
                 title="Medium Risk"
                 value={stats.medium.toLocaleString()}
-                subtitle={`${stats.mediumPct}% of total users`}
+                subtitle={`${stats.mediumPct}% of total customers`}
                 icon={TrendingUp}
                 variant="medium"
                 trend={{ value: 2, label: 'from yesterday' }}
@@ -189,7 +189,7 @@ const Home = () => {
               <MetricCard
                 title="Low Risk"
                 value={stats.low.toLocaleString()}
-                subtitle={`${stats.lowPct}% of total users`}
+                subtitle={`${stats.lowPct}% of total customers`}
                 icon={Activity}
                 variant="low"
                 trend={{ value: 3, label: 'from yesterday' }}
@@ -201,7 +201,7 @@ const Home = () => {
           <CardHeader>
             <CardTitle>Churn Risk Trend (Last 30 Days)</CardTitle>
             <CardDescription>
-              Daily count of users by risk level - showing post-Ramadan patterns
+              Daily count of customers by risk level - showing churn patterns over time
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -258,13 +258,13 @@ const Home = () => {
               <div>
                 <CardTitle>
                   {showAllUsers
-                    ? `All Users (${filteredUsers.length}${riskFilter !== 'ALL' ? ` - ${riskFilter} Risk` : ''})`
-                    : 'Top 10 At-Risk Users'}
+                    ? `All Customers (${filteredUsers.length}${riskFilter !== 'ALL' ? ` - ${riskFilter} Risk` : ''})`
+                    : 'Top 10 At-Risk Customers'}
                 </CardTitle>
                 <CardDescription>
                   {showAllUsers
-                    ? `Showing ${paginatedUsers.length} of ${filteredUsers.length} users`
-                    : 'Users with highest churn probability requiring immediate attention'}
+                    ? `Showing ${paginatedUsers.length} of ${filteredUsers.length} customers`
+                    : 'Customers with highest churn probability requiring immediate attention'}
                 </CardDescription>
               </div>
               <div className="flex gap-2 flex-wrap">
@@ -320,7 +320,7 @@ const Home = () => {
                     setRiskFilter('ALL');
                   }}
                 >
-                  {showAllUsers ? 'Show Top 10' : 'View All Users'}
+                  {showAllUsers ? 'Show Top 10' : 'View All Customers'}
                 </Button>
               </div>
             </div>
@@ -330,26 +330,26 @@ const Home = () => {
               <table className="w-full">
                 <thead>
                   <tr className="border-b">
-                    <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">User ID</th>
+                    <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Customer ID</th>
                     <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Risk Level</th>
                     <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Probability</th>
-                    <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Days Inactive</th>
+                    <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Tenure (Months)</th>
                     <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Top Driver</th>
                   </tr>
                 </thead>
                 <tbody>
                   {(showAllUsers ? paginatedUsers : topAtRiskUsers).map((user) => (
                     <tr
-                      key={user.userId}
+                      key={user.customerId || user.userId}
                       className="border-b hover:bg-muted/50 transition-colors cursor-pointer"
                       onClick={() => handleUserClick(user)}
                     >
-                      <td className="py-3 px-4 text-sm font-mono">{user.userId}</td>
+                      <td className="py-3 px-4 text-sm font-mono">{user.customerId || user.userId}</td>
                       <td className="py-3 px-4">
                         <RiskBadge level={user.riskLevel} />
                       </td>
                       <td className="py-3 px-4 text-sm font-semibold">{(user.churnProbability * 100).toFixed(1)}%</td>
-                      <td className="py-3 px-4 text-sm">{user.daysInactive} days</td>
+                      <td className="py-3 px-4 text-sm">{user.tenureMonths || user.daysInactive || 0} months</td>
                       <td className="py-3 px-4 text-sm text-muted-foreground">{user.topDriver}</td>
                     </tr>
                   ))}
@@ -395,7 +395,7 @@ const Home = () => {
             <div className="flex flex-wrap gap-3">
               <Button variant="outline" className="gap-2" onClick={handleExport}>
                 <Download className="h-4 w-4" />
-                Export High Risk Users
+                Export High Risk Customers
               </Button>
               <Button variant="outline" className="gap-2" onClick={handleRefresh}>
                 <RefreshCw className="h-4 w-4" />

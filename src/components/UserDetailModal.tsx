@@ -5,7 +5,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { UserPrediction } from "@/data/mockData.ts";
+import { UserPrediction } from "@/data/mockData";
 import { RiskBadge } from "./RiskBadge";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -21,54 +21,57 @@ interface UserDetailModalProps {
 export const UserDetailModal = ({ user, open, onOpenChange }: UserDetailModalProps) => {
   if (!user) return null;
 
-  // Generate SHAP-like feature contributions
+  // Generate SHAP-like feature contributions for Telco
   const shapData = [
     { 
-      feature: 'Days Inactive', 
-      value: user.features.days_since_last_session > 7 ? 15 : -5,
-      description: `${user.features.days_since_last_session} days since last session`
+      feature: 'Contract Type', 
+      value: (user.features.is_monthly_contract || user.contractType?.toLowerCase().includes('month')) ? 18 : -8,
+      description: user.contractType || 'Month-to-month contract'
     },
     { 
-      feature: 'Ramadan Pattern', 
-      value: user.features.ramadan_engagement_ratio > 3 ? 12 : -8,
-      description: `${user.features.ramadan_engagement_ratio.toFixed(1)}x engagement during Ramadan`
+      feature: 'Tenure', 
+      value: (user.features.tenure_months || user.tenureMonths || 0) < 12 ? 15 : -10,
+      description: `${user.features.tenure_months || user.tenureMonths || 0} months tenure`
     },
     { 
-      feature: 'Current Streak', 
-      value: user.features.streak_current === 0 ? 10 : -10,
-      description: `${user.features.streak_current} day streak`
+      feature: 'Payment Method', 
+      value: (user.features.payment_method || '').includes('Electronic') ? 12 : -6,
+      description: user.features.payment_method || 'Payment method'
     },
     { 
-      feature: 'Weekly Activity', 
-      value: user.features.session_frequency_7d < 5 ? 8 : -6,
-      description: `${user.features.session_frequency_7d} sessions in last 7 days`
+      feature: 'Monthly Charges', 
+      value: (user.features.monthly_charges || 0) > 80 ? 8 : -5,
+      description: `$${user.features.monthly_charges?.toFixed(2) || '0.00'} per month`
     },
     { 
-      feature: 'Quran Reading', 
-      value: user.features.quran_reading_pct < 0.3 ? 6 : -7,
-      description: `${(user.features.quran_reading_pct * 100).toFixed(0)}% of sessions`
+      feature: 'Service Count', 
+      value: (user.features.total_services || 0) < 3 ? 10 : -7,
+      description: `${user.features.total_services || 0} services subscribed`
     },
     { 
-      feature: 'Prayer Times', 
-      value: user.features.prayer_time_interaction_rate < 0.5 ? 5 : -5,
-      description: `${(user.features.prayer_time_interaction_rate * 100).toFixed(0)}% interaction rate`
+      feature: 'Billing Risk', 
+      value: (user.features.billing_risk_score || 0) > 0.7 ? 9 : -4,
+      description: `${((user.features.billing_risk_score || 0) * 100).toFixed(0)}% risk score`
     }
   ].sort((a, b) => Math.abs(b.value) - Math.abs(a.value));
 
-  // Generate intervention recommendation
+  // Generate intervention recommendation for Telco
   const getIntervention = () => {
+    const customerId = user.customerId || user.userId;
+    const tenure = user.features.tenure_months || user.tenureMonths || 0;
+    
     if (user.riskLevel === 'HIGH') {
       return {
         title: 'Immediate Intervention Required',
         icon: AlertCircle,
         color: 'risk-high',
         actions: [
-          'Send personalized push notification within 24 hours',
-          'Offer premium feature trial for 7 days',
-          'Recommend content based on past Ramadan activity',
-          'Schedule follow-up check in 3 days'
+          'Contact customer within 24 hours with retention offer',
+          'Offer contract upgrade with 15% discount',
+          'Propose service bundle to increase value',
+          'Schedule follow-up call in 3 days'
         ],
-        template: `As-salamu alaykum ${user.userId}! We noticed you haven't visited in ${user.daysInactive} days. We've prepared special content just for you - check out your personalized Quran reading plan! 📖✨`
+        template: `Dear ${customerId}, we value your business! We'd like to offer you a special retention package: upgrade to an annual contract and save 15% plus receive premium service bundles. Call us at 1-800-RETAIN today!`
       };
     } else if (user.riskLevel === 'MEDIUM') {
       return {
@@ -76,25 +79,25 @@ export const UserDetailModal = ({ user, open, onOpenChange }: UserDetailModalPro
         icon: TrendingDown,
         color: 'risk-medium',
         actions: [
-          'Include in weekly content digest email',
-          'Send Jummah reminder on Friday',
-          'Highlight new features or content',
-          'Monitor for 7 days'
+          'Send email with service bundle promotion',
+          'Offer payment method optimization (auto-pay discount)',
+          'Highlight new services or features',
+          'Monitor account activity for 7 days'
         ],
-        template: `Jummah Mubarak! 🕌 We have new content you might enjoy based on your interests. Take a moment to explore today! 🌟`
+        template: `Hi ${customerId}, thank you for being a valued customer for ${tenure} months! We have exciting new service bundles that could save you money. Check your email for exclusive offers!`
       };
     } else {
       return {
-        title: 'Maintain Engagement',
+        title: 'Maintain Satisfaction',
         icon: CheckCircle,
         color: 'risk-low',
         actions: [
-          'Continue regular content updates',
-          'Send streak milestone congratulations',
-          'Suggest advanced features',
-          'Request feedback/rating'
+          'Continue regular account reviews',
+          'Send loyalty rewards and appreciation',
+          'Suggest service upgrades or add-ons',
+          'Request feedback for service improvement'
         ],
-        template: `MashAllah! 🌟 You're doing great! Keep up your ${user.features.streak_current}-day streak. Discover what's new this week! 📚`
+        template: `Thank you ${customerId} for your loyalty! As a valued customer of ${tenure} months, we'd love to hear your feedback and explore ways to enhance your service experience.`
       };
     }
   };
@@ -107,11 +110,11 @@ export const UserDetailModal = ({ user, open, onOpenChange }: UserDetailModalPro
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-3">
-            <span className="font-mono">{user.userId}</span>
+            <span className="font-mono">{user.customerId || user.userId}</span>
             <RiskBadge level={user.riskLevel} />
           </DialogTitle>
           <DialogDescription>
-            Detailed churn prediction analysis and intervention recommendations
+            Detailed customer churn prediction analysis and retention recommendations
           </DialogDescription>
         </DialogHeader>
 
@@ -129,25 +132,25 @@ export const UserDetailModal = ({ user, open, onOpenChange }: UserDetailModalPro
             <Card>
               <CardContent className="pt-6">
                 <div className="text-2xl font-bold text-foreground">
-                  {user.daysInactive}
+                  {user.features.tenure_months || user.tenureMonths || 0}
                 </div>
-                <p className="text-xs text-muted-foreground mt-1">Days Inactive</p>
+                <p className="text-xs text-muted-foreground mt-1">Tenure (Months)</p>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="pt-6">
                 <div className="text-2xl font-bold text-foreground capitalize">
-                  {user.subscriptionType}
+                  {user.contractType || user.subscriptionType || 'N/A'}
                 </div>
-                <p className="text-xs text-muted-foreground mt-1">Subscription</p>
+                <p className="text-xs text-muted-foreground mt-1">Contract Type</p>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="pt-6">
                 <div className="text-2xl font-bold text-foreground">
-                  {user.features.streak_current}
+                  ${user.features.monthly_charges?.toFixed(0) || '0'}
                 </div>
-                <p className="text-xs text-muted-foreground mt-1">Current Streak</p>
+                <p className="text-xs text-muted-foreground mt-1">Monthly Charges</p>
               </CardContent>
             </Card>
           </div>
@@ -250,28 +253,36 @@ export const UserDetailModal = ({ user, open, onOpenChange }: UserDetailModalPro
             </CardContent>
           </Card>
 
-          {/* User Timeline */}
+          {/* Customer Details */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">User Timeline</CardTitle>
+              <CardTitle className="text-lg">Customer Details</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
                 <div className="flex items-center gap-3 text-sm">
-                  <div className="w-24 text-muted-foreground">Signup:</div>
+                  <div className="w-32 text-muted-foreground">Signup Date:</div>
                   <div className="font-medium">{user.signupDate}</div>
                 </div>
                 <div className="flex items-center gap-3 text-sm">
-                  <div className="w-24 text-muted-foreground">Last Active:</div>
-                  <div className="font-medium">{user.lastActive}</div>
+                  <div className="w-32 text-muted-foreground">Tenure:</div>
+                  <div className="font-medium">{user.features.tenure_months || user.tenureMonths || 0} months</div>
                 </div>
                 <div className="flex items-center gap-3 text-sm">
-                  <div className="w-24 text-muted-foreground">Sessions (7d):</div>
-                  <div className="font-medium">{user.features.session_frequency_7d}</div>
+                  <div className="w-32 text-muted-foreground">Monthly Charges:</div>
+                  <div className="font-medium">${user.features.monthly_charges?.toFixed(2) || '0.00'}</div>
                 </div>
                 <div className="flex items-center gap-3 text-sm">
-                  <div className="w-24 text-muted-foreground">Sessions (30d):</div>
-                  <div className="font-medium">{user.features.session_frequency_30d}</div>
+                  <div className="w-32 text-muted-foreground">Total Services:</div>
+                  <div className="font-medium">{user.features.total_services || 0}</div>
+                </div>
+                <div className="flex items-center gap-3 text-sm">
+                  <div className="w-32 text-muted-foreground">Payment Method:</div>
+                  <div className="font-medium capitalize">{user.features.payment_method || 'N/A'}</div>
+                </div>
+                <div className="flex items-center gap-3 text-sm">
+                  <div className="w-32 text-muted-foreground">Internet Type:</div>
+                  <div className="font-medium">{user.features.internet_type || 'N/A'}</div>
                 </div>
               </div>
             </CardContent>
