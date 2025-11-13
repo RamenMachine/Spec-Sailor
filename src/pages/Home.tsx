@@ -3,7 +3,8 @@ import { MetricCard } from "@/components/MetricCard";
 import { RiskBadge } from "@/components/RiskBadge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { generateMockUsers, generateTrendData } from "@/data/mockData";
+import { generateTrendData } from "@/data/mockData";
+import { loadPredictions } from "@/services/dataLoader";
 import { Users, AlertTriangle, TrendingUp, Activity, Download, RefreshCw, Lightbulb } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { useMemo, useState, useEffect } from "react";
@@ -22,43 +23,30 @@ interface ApiUser {
 
 const Home = () => {
   const navigate = useNavigate();
-  const [apiUsers, setApiUsers] = useState<any[]>([]);
-  const [isLoadingAPI, setIsLoadingAPI] = useState(true);
-  const [useAPI, setUseAPI] = useState(false);
+  const [users, setUsers] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const mockUsers = useMemo(() => generateMockUsers(1000), []);
   const trendData = useMemo(() => generateTrendData(), []);
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [modalOpen, setModalOpen] = useState(false);
 
-  // Fetch from API
+  // Load predictions from static JSON
   useEffect(() => {
-    const fetchFromAPI = async () => {
+    const fetchData = async () => {
       try {
-        const response = await fetch('http://localhost:8000/api/v1/predictions');
-        if (response.ok) {
-          const data = await response.json();
-          // API now returns complete user objects, use them directly
-          setApiUsers(data);
-          setUseAPI(true);
-          toast.success(`Loaded ${data.length} users from API!`);
-        } else {
-          console.log('API not available, using mock data');
-          setUseAPI(false);
-        }
+        const predictions = await loadPredictions();
+        setUsers(predictions);
+        toast.success(`Loaded ${predictions.length} customers successfully!`);
       } catch (error) {
-        console.log('API connection failed, using mock data');
-        setUseAPI(false);
+        console.error('Failed to load predictions:', error);
+        toast.error('Failed to load customer data');
       } finally {
-        setIsLoadingAPI(false);
+        setIsLoading(false);
       }
     };
 
-    fetchFromAPI();
+    fetchData();
   }, []);
-
-  // Only show data after API load attempt completes
-  const users = isLoadingAPI ? [] : (useAPI ? apiUsers : mockUsers);
 
   const handleExport = () => {
     const highRiskUsers = users.filter(u => u.riskLevel === 'HIGH');
@@ -67,23 +55,15 @@ const Home = () => {
   };
 
   const handleRefresh = async () => {
-    if (useAPI) {
-      setIsLoadingAPI(true);
-      try {
-        const response = await fetch('http://localhost:8000/api/v1/predictions');
-        if (response.ok) {
-          const data = await response.json();
-          setApiUsers(data);
-          toast.success('Data refreshed from API!');
-        }
-      } catch (error) {
-        toast.error('Failed to refresh from API');
-      } finally {
-        setIsLoadingAPI(false);
-      }
-    } else {
+    setIsLoading(true);
+    try {
+      const predictions = await loadPredictions();
+      setUsers(predictions);
       toast.success('Data refreshed successfully!');
-      window.location.reload();
+    } catch (error) {
+      toast.error('Failed to refresh data');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -149,19 +129,19 @@ const Home = () => {
         </div>
 
         {/* Loading State */}
-        {isLoadingAPI && (
+        {isLoading && (
           <Card>
             <CardContent className="py-12">
               <div className="flex flex-col items-center justify-center space-y-4">
                 <RefreshCw className="h-8 w-8 animate-spin text-primary" />
-                <p className="text-muted-foreground">Loading customer data from API...</p>
+                <p className="text-muted-foreground">Loading customer data...</p>
               </div>
             </CardContent>
           </Card>
         )}
 
         {/* Metrics Grid */}
-        {!isLoadingAPI && (
+        {!isLoading && (
           <>
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
               <MetricCard

@@ -5,15 +5,34 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { generateMockUsers, RiskLevel } from "@/data/mockData";
+import { RiskLevel } from "@/data/mockData";
+import { loadPredictions } from "@/services/dataLoader";
 import { Search, Filter, Download, ArrowUpDown } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { UserDetailModal } from "@/components/UserDetailModal";
 import { exportToCSV } from "@/utils/exportUtils";
 import { toast } from "sonner";
 
 const Predictions = () => {
-  const allUsers = useMemo(() => generateMockUsers(1000), []);
+  const [allUsers, setAllUsers] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Load predictions from static JSON
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const predictions = await loadPredictions();
+        setAllUsers(predictions);
+      } catch (error) {
+        console.error('Failed to load predictions:', error);
+        toast.error('Failed to load customer data');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
   const [searchQuery, setSearchQuery] = useState("");
   const [riskFilter, setRiskFilter] = useState<string>("all");
   const [subscriptionFilter, setSubscriptionFilter] = useState<string>("all");

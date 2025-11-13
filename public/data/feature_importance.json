@@ -1,0 +1,65 @@
+{
+  "features": [
+    {
+      "feature": "contract_type_Month-to-month",
+      "importance": 0.22,
+      "rank": 1
+    },
+    {
+      "feature": "tenure_months",
+      "importance": 0.18,
+      "rank": 2
+    },
+    {
+      "feature": "payment_method_Electronic check",
+      "importance": 0.15,
+      "rank": 3
+    },
+    {
+      "feature": "monthly_charges",
+      "importance": 0.12,
+      "rank": 4
+    },
+    {
+      "feature": "total_services",
+      "importance": 0.1,
+      "rank": 5
+    },
+    {
+      "feature": "is_monthly_contract",
+      "importance": 0.08,
+      "rank": 6
+    },
+    {
+      "feature": "billing_risk_score",
+      "importance": 0.07,
+      "rank": 7
+    },
+    {
+      "feature": "early_lifecycle_risk",
+      "importance": 0.05,
+      "rank": 8
+    },
+    {
+      "feature": "total_charges",
+      "importance": 0.04,
+      "rank": 9
+    },
+    {
+      "feature": "service_penetration_rate",
+      "importance": 0.03,
+      "rank": 10
+    },
+    {
+      "feature": "has_premium_internet",
+      "importance": 0.02,
+      "rank": 11
+    },
+    {
+      "feature": "payment_reliability_score",
+      "importance": 0.02,
+      "rank": 12
+    }
+  ],
+  "total_features": 12
+}
