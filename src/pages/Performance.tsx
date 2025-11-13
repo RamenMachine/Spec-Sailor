@@ -2,24 +2,61 @@ import { Layout } from "@/components/Layout";
 import { MetricCard } from "@/components/MetricCard";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { modelMetrics, featureImportance, confusionMatrix } from "@/data/mockData";
+import { loadModelMetrics, loadFeatureImportance } from "@/services/dataLoader";
 import { Target, TrendingUp, Activity, Award, Download } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
 import { exportModelReport } from "@/utils/exportUtils";
 import { toast } from "sonner";
+import { useEffect, useState } from "react";
 
 const Performance = () => {
+  const [modelMetrics, setModelMetrics] = useState<any>(null);
+  const [featureImportance, setFeatureImportance] = useState<any[]>([]);
+  const [confusionMatrix, setConfusionMatrix] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [metrics, importance] = await Promise.all([
+          loadModelMetrics(),
+          loadFeatureImportance()
+        ]);
+        setModelMetrics(metrics.metrics);
+        setConfusionMatrix(metrics.confusion_matrix);
+        setFeatureImportance(importance.features);
+      } catch (error) {
+        console.error('Failed to load model data:', error);
+        toast.error('Failed to load model performance data');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
   const handleExportReport = () => {
     exportModelReport();
     toast.success('Model report exported successfully!');
   };
 
+  if (isLoading || !modelMetrics || !confusionMatrix) {
+    return (
+      <Layout>
+        <div className="flex items-center justify-center min-h-[400px]">
+          <p className="text-muted-foreground">Loading model performance data...</p>
+        </div>
+      </Layout>
+    );
+  }
+
   // Prepare confusion matrix data for visualization
   const confusionData = [
-    { name: 'True Positive', value: confusionMatrix.truePositive, color: 'hsl(var(--risk-low))' },
-    { name: 'False Positive', value: confusionMatrix.falsePositive, color: 'hsl(var(--risk-medium))' },
-    { name: 'True Negative', value: confusionMatrix.trueNegative, color: 'hsl(var(--risk-low))' },
-    { name: 'False Negative', value: confusionMatrix.falseNegative, color: 'hsl(var(--risk-high))' }
+    { name: 'True Positive', value: confusionMatrix.true_positives, color: 'hsl(var(--risk-low))' },
+    { name: 'False Positive', value: confusionMatrix.false_positives, color: 'hsl(var(--risk-medium))' },
+    { name: 'True Negative', value: confusionMatrix.true_negatives, color: 'hsl(var(--risk-low))' },
+    { name: 'False Negative', value: confusionMatrix.false_negatives, color: 'hsl(var(--risk-high))' }
   ];
 
   // Feature names mapping for Telco features
@@ -79,7 +116,7 @@ const Performance = () => {
           />
           <MetricCard
             title="ROC-AUC"
-            value={modelMetrics.rocAuc.toFixed(2)}
+            value={modelMetrics.roc_auc.toFixed(2)}
             subtitle="Target: >0.85"
             icon={Award}
             variant="low"
@@ -119,19 +156,19 @@ const Performance = () => {
 
               <div className="space-y-3">
                 <div className="p-4 rounded-lg bg-primary-light border border-primary/20">
-                  <h4 className="font-semibold text-sm text-primary mb-1">True Positives: {confusionMatrix.truePositive}</h4>
+                  <h4 className="font-semibold text-sm text-primary mb-1">True Positives: {confusionMatrix.true_positives}</h4>
                   <p className="text-xs text-muted-foreground">Customers correctly predicted as churners</p>
                 </div>
                 <div className="p-4 rounded-lg bg-risk-medium/10 border border-risk-medium/20">
-                  <h4 className="font-semibold text-sm text-risk-medium mb-1">False Positives: {confusionMatrix.falsePositive}</h4>
+                  <h4 className="font-semibold text-sm text-risk-medium mb-1">False Positives: {confusionMatrix.false_positives}</h4>
                   <p className="text-xs text-muted-foreground">Active customers incorrectly flagged as churners</p>
                 </div>
                 <div className="p-4 rounded-lg bg-primary-light border border-primary/20">
-                  <h4 className="font-semibold text-sm text-primary mb-1">True Negatives: {confusionMatrix.trueNegative}</h4>
+                  <h4 className="font-semibold text-sm text-primary mb-1">True Negatives: {confusionMatrix.true_negatives}</h4>
                   <p className="text-xs text-muted-foreground">Active customers correctly predicted as staying</p>
                 </div>
                 <div className="p-4 rounded-lg bg-risk-high/10 border border-risk-high/20">
-                  <h4 className="font-semibold text-sm text-risk-high mb-1">False Negatives: {confusionMatrix.falseNegative}</h4>
+                  <h4 className="font-semibold text-sm text-risk-high mb-1">False Negatives: {confusionMatrix.false_negatives}</h4>
                   <p className="text-xs text-muted-foreground">Churners missed by the model</p>
                 </div>
               </div>

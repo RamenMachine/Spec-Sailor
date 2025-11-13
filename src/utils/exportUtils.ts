@@ -1,40 +1,40 @@
-import { UserPrediction } from "@/data/mockData.ts";
+import { UserPrediction } from "@/services/dataLoader";
 
 export const exportToCSV = (users: UserPrediction[], filename: string = 'churn-predictions.csv') => {
   // Define CSV headers
   const headers = [
-    'User ID',
+    'Customer ID',
     'Risk Level',
     'Churn Probability',
-    'Days Inactive',
+    'Tenure (Months)',
     'Last Active',
-    'Subscription Type',
+    'Contract Type',
     'Signup Date',
     'Top Driver',
-    'Session Frequency (7d)',
-    'Session Frequency (30d)',
-    'Current Streak',
-    'Ramadan Engagement Ratio',
-    'Quran Reading %',
-    'Prayer Time Interaction %'
+    'Monthly Charges',
+    'Total Charges',
+    'Total Services',
+    'Billing Risk Score',
+    'Service Satisfaction Score',
+    'Payment Method'
   ];
 
   // Convert users to CSV rows
   const rows = users.map(user => [
-    user.userId,
+    user.customerId || user.userId || 'N/A',
     user.riskLevel,
     (user.churnProbability * 100).toFixed(2),
-    user.daysInactive,
+    user.tenureMonths || user.features.tenure_months || 'N/A',
     user.lastActive,
-    user.subscriptionType,
+    user.contractType || 'N/A',
     user.signupDate,
     user.topDriver,
-    user.features.session_frequency_7d,
-    user.features.session_frequency_30d,
-    user.features.streak_current,
-    user.features.ramadan_engagement_ratio.toFixed(2),
-    (user.features.quran_reading_pct * 100).toFixed(2),
-    (user.features.prayer_time_interaction_rate * 100).toFixed(2)
+    user.features.monthly_charges || 'N/A',
+    user.features.total_charges || 'N/A',
+    user.features.total_services || 'N/A',
+    user.features.billing_risk_score || 'N/A',
+    user.features.service_satisfaction_score || 'N/A',
+    user.features.payment_method || 'N/A'
   ]);
 
   // Combine headers and rows
@@ -59,51 +59,51 @@ export const exportToCSV = (users: UserPrediction[], filename: string = 'churn-p
 
 export const exportModelReport = () => {
   const reportContent = `
-BARAKAH RETAIN - MODEL PERFORMANCE REPORT
+SPECSAILOR - TELCO CHURN PREDICTION MODEL REPORT
 Generated: ${new Date().toLocaleString()}
 
 ========================================
 MODEL METRICS
 ========================================
-Accuracy:     87.0%
-Precision:    84.0%
-Recall:       79.0%
-F1 Score:     81.0%
-ROC-AUC:      0.92
+Accuracy:     82.7%
+Precision:    69.2%
+Recall:       54.1%
+F1 Score:     60.7%
+ROC-AUC:      0.85
 
 ========================================
 CONFUSION MATRIX
 ========================================
-True Positives:   1,420 (Correctly predicted churners)
-False Positives:    180 (False alarms)
-True Negatives:   5,680 (Correctly predicted active users)
-False Negatives:    320 (Missed churners)
+True Positives:     389 (Correctly predicted churners)
+False Positives:    173 (False alarms)
+True Negatives:   1,174 (Correctly predicted retained customers)
+False Negatives:    331 (Missed churners)
 
 ========================================
 TOP FEATURES (by importance)
 ========================================
-1. Days Since Last Session        (18%)
-2. Ramadan Engagement Ratio       (15%)
-3. Session Frequency (7d)         (12%)
-4. Current Streak                 (11%)
-5. Quran Reading %                (9%)
-6. Prayer Time Interaction        (8%)
+1. Tenure (Months)                (22%)
+2. Month-to-month Contract        (18%)
+3. Electronic Check Payment       (15%)
+4. Monthly Charges                (12%)
+5. Total Services                 (10%)
+6. Billing Risk Score             (8%)
 
 ========================================
 KEY INSIGHTS
 ========================================
-- 68% of Ramadan converts show high churn risk within 30 days
-- Streak breaks increase churn probability by 45%
-- Regular Quran readers have 20% lower churn rate
-- Critical intervention window: Days 7-14 post-Ramadan
+- Month-to-month contracts show 3x higher churn risk
+- Electronic check payment method correlates with higher churn
+- Customers with tenure < 12 months have 60% churn rate
+- Service penetration rate inversely correlates with churn
 
 ========================================
 RECOMMENDATIONS
 ========================================
-1. Launch retention campaigns at Day 7, 14, 21 post-Ramadan
-2. Implement streak recovery notifications
-3. Promote Quran reading features to low-engagement users
-4. Send prayer time reminders to declining users
+1. Incentivize annual/two-year contracts for high-risk customers
+2. Promote autopay and alternative payment methods
+3. Enhanced onboarding for first-year customers
+4. Cross-sell additional services to increase engagement
 `;
 
   const blob = new Blob([reportContent], { type: 'text/plain;charset=utf-8;' });
@@ -111,7 +111,7 @@ RECOMMENDATIONS
   const url = URL.createObjectURL(blob);
   
   link.setAttribute('href', url);
-  link.setAttribute('download', 'barakah-retain-report.txt');
+  link.setAttribute('download', 'specsailor-churn-report.txt');
   link.style.visibility = 'hidden';
   
   document.body.appendChild(link);
