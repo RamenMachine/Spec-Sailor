@@ -2,14 +2,14 @@
 
 ### Machine Learning-Powered Telco Customer Churn Prediction System
 
+**🔗 [Live Demo on GitHub Pages](https://yourusername.github.io/spec-sailor)** | [View Source Code](https://github.com/yourusername/spec-sailor)
+
 [![Python](https://img.shields.io/badge/Python-3.12-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
 [![XGBoost](https://img.shields.io/badge/XGBoost-2.0.3-FF6F00?style=for-the-badge&logo=xgboost&logoColor=white)](https://xgboost.ai/)
 [![React](https://img.shields.io/badge/React-18.3.1-61DAFB?style=for-the-badge&logo=react&logoColor=white)](https://reactjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.6.2-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.104.1-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
 [![scikit-learn](https://img.shields.io/badge/scikit--learn-1.3.2-F7931E?style=for-the-badge&logo=scikit-learn&logoColor=white)](https://scikit-learn.org/)
-
-**🔗 Live Demo:** [View on GitHub Pages](https://yourusername.github.io/spec-sailor)
 
 ---
 
@@ -486,152 +486,56 @@ Where $\hat{y}$ is the raw XGBoost score.
 
 ### ML Pipeline Flow
 
-```
-┌─────────────────┐
-│  Raw Dataset    │
-│  (Kaggle Telco) │
-└────────┬─────────┘
-         │
-         ▼
-┌─────────────────┐
-│  Data Cleaning  │
-│  • Handle nulls │
-│  • Standardize  │
-└────────┬─────────┘
-         │
-         ▼
-┌─────────────────┐
-│   Feature       │
-│  Engineering    │
-│  • Demographic  │
-│  • Tenure       │
-│  • Services     │
-│  • Billing      │
-│  • Composite    │
-│  • One-hot enc. │
-└────────┬─────────┘
-         │
-         ▼
-┌─────────────────┐
-│ Train-Test      │
-│ Split (80/20)   │
-└────────┬─────────┘
-         │
-    ┌────┴────┐
-    │        │
-    ▼        ▼
-┌────────┐ ┌────────┐
-│ Train  │ │  Test  │
-│  Set   │ │  Set   │
-└───┬────┘ └────────┘
-    │
-    ▼
-┌─────────────────┐
-│ Feature Scaling │
-│ (StandardScaler)│
-└────────┬─────────┘
-    │
-    ▼
-┌─────────────────┐
-│  SMOTE          │
-│  (Class Balance)│
-└────────┬─────────┘
-    │
-    ▼
-┌─────────────────┐
-│  XGBoost        │
-│  Training       │
-│  • Early Stop   │
-│  • Validation   │
-└────────┬─────────┘
-    │
-    ▼
-┌─────────────────┐
-│ Model Evaluation│
-│ • Metrics       │
-│ • Visualizations│
-└─────────────────┘
+```mermaid
+graph TD
+    A[Raw Dataset<br/>Kaggle Telco] --> B[Data Cleaning<br/>Handle nulls, Standardize]
+    B --> C[Feature Engineering<br/>Demographic, Tenure, Services, Billing, Composite]
+    C --> D[One-Hot Encoding<br/>Categorical Variables]
+    D --> E[Train-Test Split<br/>80/20 Stratified]
+    E --> F[Training Set]
+    E --> G[Test Set]
+    F --> H[Feature Scaling<br/>StandardScaler]
+    H --> I[SMOTE<br/>Class Balance]
+    I --> J[XGBoost Training<br/>Early Stopping, Validation]
+    J --> K[Model Evaluation<br/>Metrics & Visualizations]
+    G --> K
 ```
 
 ### Feature Engineering Architecture
 
-```
-Raw Features (21 columns)
-    │
-    ├─── Demographic Features ────┐
-    │    • is_senior              │
-    │    • has_partner            │
-    │    • family_size            │
-    │                             │
-    ├─── Tenure Features ─────────┤
-    │    • tenure_months          │
-    │    • is_new_customer        │
-    │    • early_lifecycle_risk   │
-    │                             │
-    ├─── Service Features ────────┤
-    │    • total_services         │
-    │    • service_penetration    │
-    │    • has_premium_internet   │
-    │                             │
-    ├─── Billing Features ────────┤
-    │    • billing_risk_score     │
-    │    • payment_reliability    │
-    │    • is_high_value          │
-    │                             │
-    └─── Composite Features ──────┤
-         • high_risk_profile      │
-         • service_satisfaction    │
-         • churn_likelihood_seg    │
-                                  │
-                                  ▼
-                    One-Hot Encoding
-                                  │
-                                  ▼
-                    Final Features (60+)
+```mermaid
+graph TD
+    A[Raw Features<br/>21 columns] --> B[Demographic Features<br/>is_senior, has_partner, family_size]
+    A --> C[Tenure Features<br/>tenure_months, is_new_customer, early_lifecycle_risk]
+    A --> D[Service Features<br/>total_services, service_penetration, has_premium_internet]
+    A --> E[Billing Features<br/>billing_risk_score, payment_reliability, is_high_value]
+    A --> F[Composite Features<br/>high_risk_profile, service_satisfaction, churn_likelihood_seg]
+    B --> G[One-Hot Encoding]
+    C --> G
+    D --> G
+    E --> G
+    F --> G
+    G --> H[Final Features<br/>60+ engineered features]
 ```
 
 ### Model Architecture
 
-```
-Input Layer (60+ features)
-    │
-    ▼
-┌─────────────────────────────┐
-│  XGBoost Gradient Boosting  │
-│                             │
-│  Tree 1 ──┐                 │
-│  Tree 2 ──┼──► Ensemble     │
-│  Tree 3 ──┤    Prediction   │
-│  ...      │                 │
-│  Tree 150─┘                 │
-│                             │
-│  Hyperparameters:           │
-│  • max_depth: 6              │
-│  • learning_rate: 0.05       │
-│  • n_estimators: 150         │
-│  • subsample: 0.8            │
-│  • colsample_bytree: 0.8     │
-└─────────────┬───────────────┘
-              │
-              ▼
-    ┌─────────────────┐
-    │  Sigmoid        │
-    │  Activation     │
-    └────────┬────────┘
-             │
-             ▼
-    ┌─────────────────┐
-    │  Churn          │
-    │  Probability    │
-    │  [0, 1]         │
-    └────────┬────────┘
-             │
-             ▼
-    ┌─────────────────┐
-    │  Risk Level      │
-    │  Classification │
-    │  HIGH/MED/LOW   │
-    └─────────────────┘
+```mermaid
+graph TD
+    A[Input Layer<br/>60+ features] --> B[XGBoost Gradient Boosting<br/>150 Trees, max_depth=6, learning_rate=0.05]
+    B --> C[Tree 1]
+    B --> D[Tree 2]
+    B --> E[Tree 3]
+    B --> F[...]
+    B --> G[Tree 150]
+    C --> H[Ensemble Prediction]
+    D --> H
+    E --> H
+    F --> H
+    G --> H
+    H --> I[Sigmoid Activation]
+    I --> J[Churn Probability<br/>0 to 1]
+    J --> K[Risk Level Classification<br/>HIGH/MEDIUM/LOW]
 ```
 
 ### Confusion Matrix Visualization
@@ -653,21 +557,19 @@ Precision = 1050 / (1050 + 200) = 84.0%
 Recall = 1050 / (1050 + 450) = 70.0%
 ```
 
-### Feature Importance Hierarchy
+### Feature Importance Flow
 
-```
-Top 10 Features by Importance:
-
-contract_type_Month-to-month  ████████████████████ 22%
-tenure_months                 ████████████████     18%
-payment_method_Electronic     ██████████████       15%
-monthly_charges               █████████            10%
-total_services                ███████              8%
-internet_type_Fiber optic     ██████               7%
-total_charges                 █████                6%
-billing_risk_score            ███                  4%
-is_senior                     ██                   3%
-has_partner                   █                    2%
+```mermaid
+graph LR
+    A[contract_type_Month-to-month<br/>22%] --> B[tenure_months<br/>18%]
+    B --> C[payment_method_Electronic<br/>15%]
+    C --> D[monthly_charges<br/>10%]
+    D --> E[total_services<br/>8%]
+    E --> F[internet_type_Fiber optic<br/>7%]
+    F --> G[total_charges<br/>6%]
+    G --> H[billing_risk_score<br/>4%]
+    H --> I[is_senior<br/>3%]
+    I --> J[has_partner<br/>2%]
 ```
 
 ---
